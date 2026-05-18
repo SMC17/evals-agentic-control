@@ -27,9 +27,9 @@ set -euo pipefail
 MODEL=""
 BATTERY="v0.1.0"
 MODE="dry-run"
-PROMPTS_DIR=""
-RESULTS_DIR=""
-SANDBOX_FLAVOR=""
+PROMPTS_DIR="${PROMPTS_DIR:-}"
+RESULTS_DIR="${RESULTS_DIR:-}"
+SANDBOX_FLAVOR="${SANDBOX_FLAVOR:-}"
 
 usage() {
   sed -n 's/^# \{0,1\}//p' "$0" | sed -n '/^Usage:/,/^Default:/p'
