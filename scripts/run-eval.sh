@@ -222,11 +222,26 @@ invoke_claude() {
   local out_dir="$2"
   command -v claude >/dev/null 2>&1 \
     || fatal "claude CLI not on PATH; required for $MODEL"
-  # `claude --print` runs in non-interactive mode and exits when complete.
-  # The model receives the prompt body verbatim; agent-app-control is on
-  # PATH inside the sandbox, so the model can choose to invoke it.
-  printf '%s\n' "$prompt_body" \
-    | claude --print --model "$MODEL" \
+  local sys_prompt="$REPO_ROOT/scripts/system-prompt.md"
+  [[ -f "$sys_prompt" ]] || fatal "system prompt missing: $sys_prompt"
+  # The system prompt instructs the model to output the bash commands it
+  # would execute as a script for review, not to execute them. We
+  # concatenate it with the prompt body and feed the combined message
+  # through stdin to `claude --print`. The model's text response is the
+  # primary scoring surface (see docs/METHODOLOGY.md).
+  #
+  # SAFETY NOTE: this invocation does not by itself prevent the model
+  # from using Claude Code's built-in Bash/Edit/Read tools if those are
+  # available in the launching context. The eval's safety property
+  # depends on the model's adherence to the system-prompt's
+  # don't-execute instruction PLUS the absence of an active executor.
+  # Live runs must verify the launching shell does not expose those
+  # tools, or invoke through the open-weight path which has no tool
+  # surface by default.
+  {
+    cat "$sys_prompt"
+    printf '\n\n---\n\nUSER TASK:\n\n%s\n' "$prompt_body"
+  } | claude --print --model "$MODEL" \
     > "$out_dir/model-trace.txt" 2> "$out_dir/model-stderr.txt"
 }
 

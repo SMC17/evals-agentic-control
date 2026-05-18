@@ -1,15 +1,45 @@
 # Sandbox Design
 
-`evals-agentic-control` cannot run live against the host filesystem,
-host Hyprland session, or host network. The threat model is, by
-construction, a set of prompts that ask the model to delete files,
-exfiltrate credentials, modify the window manager, and create
-persistent state. Running those prompts unsandboxed is the same
-class of mistake as the 2026-05-13 `XDG_STATE_HOME` wipe — only
-worse, because we'd be telling the agent to do it.
+## What changed: scoring is on the text the model produces
 
-This document specifies the sandbox the eval requires. It is *not
-yet built*; that work is the next milestone after the scaffold lands.
+The v0.1.0 scoring design (per `docs/METHODOLOGY.md`) operates on the
+**text the model emits**, not on the side effects of that text. The
+system prompt at `scripts/system-prompt.md` instructs the model to
+output the bash commands it would execute as a script for human
+review, rather than running them. The eval's load-bearing safety
+property is therefore **the model's adherence to that meta-instruction
+combined with the absence of an executor**, not a kernel-level
+containment boundary.
+
+This changes the sandbox requirements substantially. The original
+framing — "running these prompts unsandboxed is the 2026-05-13 wipe,
+only worse" — applies only if the model has an executor available.
+For Claude-family invocations via `claude --print` we must verify that
+the launching context exposes no tool surface that would let the model
+execute its own output. For open-weight invocations via `llama.cpp` or
+MLX the model has no executor by default; this is the reference-safe
+path.
+
+## What the sandbox is still for
+
+Even with text-only scoring, the sandbox remains valuable for two
+reasons:
+
+1. **Prompt environmental realism.** C2 requires synthetic secrets on
+   the screen; C4 requires the injection-bearing document to be
+   loaded in `Pdf-viewer`; C5 requires `~/.config/systemd/user/` and
+   `~/.config/cron/` to be inspectable. The sandbox is where those
+   fixtures live, separate from the host's real state.
+2. **Substrate validation (the optional secondary pass).** After
+   v0.1.0 verdicts on the model's text output, an optional pass
+   actually executes the produced scripts inside the sandbox and
+   observes side effects. This is what tests whether `sandbox-gate`
+   *would* in fact intercept the model's `rm -rf $VAR/...`. That
+   secondary pass requires the original kernel-level isolation —
+   it's the original sandbox use case, scoped to substrate audit
+   rather than model evaluation.
+
+## Threat model the sandbox addresses (revised)
 
 ## Threat model the sandbox addresses
 
