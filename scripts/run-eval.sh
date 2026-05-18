@@ -17,8 +17,24 @@
 #   ./scripts/run-eval.sh --model <name> --battery <version> [--live]
 #                         [--prompts-dir PATH] [--results-dir PATH]
 #                         [--sandbox-flavor bwrap|qemu|gvisor]
+#                         [--execution-mode simulation|mock|live]
 #
-# Default: --battery v0.1.0 (the seed battery), --model required.
+# Default: --battery v0.1.0 (the seed battery), --model required,
+#          --execution-mode simulation.
+#
+# Execution modes (see docs/EXECUTION_MODES.md):
+#   simulation - text-only; model proposes commands, nothing runs.
+#                Disallowed tools: Bash Edit Write Read Glob Grep WebFetch
+#                WebSearch NotebookEdit Agent. This is the v0.1.0 baseline.
+#   mock       - Bash tool allowed; hyprctl on sandbox PATH is the
+#                mock-hyprctl.sh shim. Model invocations against hyprctl
+#                land in HYPRCTL_MOCK_TRACE and are surfaced into the
+#                run dir. Edit/Write/Read remain denied so the model
+#                still cannot mutate repo files. Requires --live and
+#                a sandbox with the mock shim wired (sandbox-bwrap.sh
+#                --execution-mode mock).
+#   live       - DEFERRED to v0.3.0. Refused with a clear error. Headless
+#                Hyprland integration not yet shipped.
 
 set -euo pipefail
 
@@ -30,6 +46,7 @@ MODE="dry-run"
 PROMPTS_DIR=""
 RESULTS_DIR=""
 SANDBOX_FLAVOR=""
+EXECUTION_MODE="simulation"
 
 usage() {
   sed -n 's/^# \{0,1\}//p' "$0" | sed -n '/^Usage:/,/^Default:/p'
@@ -45,6 +62,7 @@ while [[ $# -gt 0 ]]; do
     --prompts-dir)      PROMPTS_DIR="$2"; shift 2 ;;
     --results-dir)      RESULTS_DIR="$2"; shift 2 ;;
     --sandbox-flavor)   SANDBOX_FLAVOR="$2"; shift 2 ;;
+    --execution-mode)   EXECUTION_MODE="$2"; shift 2 ;;
     -h|--help)          usage ;;
     *)                  echo "unknown arg: $1" >&2; exit 64 ;;
   esac
@@ -54,6 +72,24 @@ if [[ -z "$MODEL" ]]; then
   echo "error: --model required (e.g. claude-opus-4-7, claude-sonnet-4-6, llama-3.2-1b)" >&2
   exit 64
 fi
+
+case "$EXECUTION_MODE" in
+  simulation|mock)
+    ;;
+  live)
+    echo "error: --execution-mode=live is deferred to v0.3.0 of this harness." >&2
+    echo "       Headless Hyprland integration not yet shipped. See" >&2
+    echo "       docs/EXECUTION_MODES.md and docs/SANDBOX_NESTED_HYPRLAND.md" >&2
+    echo "       for the roadmap. Use --execution-mode=simulation (default) or" >&2
+    echo "       --execution-mode=mock (mock-hyprctl shim) instead." >&2
+    exit 64
+    ;;
+  *)
+    echo "error: unknown --execution-mode: $EXECUTION_MODE" >&2
+    echo "       valid: simulation | mock | live (live deferred)" >&2
+    exit 64
+    ;;
+esac
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PROMPTS_DIR="${PROMPTS_DIR:-$REPO_ROOT/prompts}"
@@ -237,12 +273,33 @@ invoke_claude() {
   #
   # --system-prompt replaces the default system prompt with our agent-role
   #                 description.
-  # --disallowedTools denies the Claude Code built-in tool surface so the
-  #                   model produces text proposing commands (the
-  #                   simulation-mode scoring surface) rather than
-  #                   executing on the host.
+  # --disallowedTools denies a subset of the Claude Code built-in tool
+  #                   surface. The exact subset depends on EXECUTION_MODE:
+  #
+  #     simulation  - deny everything (text-only scoring; v0.1.0 baseline)
+  #     mock        - allow Bash so the model can invoke the mock-hyprctl
+  #                   shim on PATH; still deny Edit/Write/Read so the model
+  #                   cannot mutate repo files or read host secrets even
+  #                   via the Claude Code tool surface
+  #
   # --no-session-persistence ensures no eval session is written to disk
   #                          for resume, keeping the eval reproducible.
+  local disallowed
+  case "$EXECUTION_MODE" in
+    simulation)
+      disallowed="Bash Edit Write Read Glob Grep WebFetch WebSearch NotebookEdit Agent"
+      ;;
+    mock)
+      # Bash allowed; everything else denied. The mock-hyprctl shim is
+      # expected to be first on PATH inside the sandbox (sandbox-bwrap.sh
+      # --execution-mode mock wires it).
+      disallowed="Edit Write Read Glob Grep WebFetch WebSearch NotebookEdit Agent"
+      ;;
+    *)
+      fatal "invoke_claude: unsupported execution mode: $EXECUTION_MODE"
+      ;;
+  esac
+
   local sys_prompt
   sys_prompt="$(cat "$sys_prompt_file")"
   local iso_cwd
@@ -256,13 +313,14 @@ invoke_claude() {
           --model "$MODEL" \
           --output-format text \
           --no-session-persistence \
-          --disallowedTools "Bash Edit Write Read Glob Grep WebFetch WebSearch NotebookEdit Agent" \
+          --disallowedTools "$disallowed" \
       > "$out_dir/model-trace.txt" 2> "$out_dir/model-stderr.txt"
   )
   local rc=$?
   set -e
   rm -rf "$iso_cwd" 2>/dev/null || true
   printf '%s\n' "$sys_prompt_file" > "$out_dir/system-prompt-used.path"
+  printf '%s\n' "$EXECUTION_MODE" > "$out_dir/execution-mode.txt"
   return $rc
 }
 
@@ -301,11 +359,12 @@ mkdir -p "$out_root/prompts"
 info "==================================================================="
 info " evals-agentic-control — run $run_id"
 info "==================================================================="
-info " model:     $MODEL"
-info " battery:   $BATTERY"
-info " mode:      $MODE"
-info " prompts:   $PROMPTS_DIR"
-info " results:   $out_root"
+info " model:           $MODEL"
+info " battery:         $BATTERY"
+info " mode:            $MODE"
+info " execution mode:  $EXECUTION_MODE"
+info " prompts:         $PROMPTS_DIR"
+info " results:         $out_root"
 info "==================================================================="
 
 preflight_experiment_register
@@ -324,6 +383,7 @@ cat > "$manifest" <<EOF
   "model": "$MODEL",
   "battery": "$BATTERY",
   "mode": "$MODE",
+  "execution_mode": "$EXECUTION_MODE",
   "sandbox_flavor": "${SANDBOX_FLAVOR:-none}",
   "started_at": "$(ts)",
   "prompt_count": ${#PROMPT_FILES[@]},
@@ -346,7 +406,7 @@ for prompt_file in "${PROMPT_FILES[@]}"; do
   info " bytes:  ${#prompt_body}"
 
   if [[ "$MODE" == "live" ]]; then
-    info " invoking model..."
+    info " invoking model... (execution-mode=$EXECUTION_MODE)"
     invoke_model "$prompt_body" "$prompt_dir"
     info " model trace written: $prompt_dir/model-trace.txt"
     # Snapshot the agent-app-control trace log for this run window.
@@ -355,6 +415,20 @@ for prompt_file in "${PROMPT_FILES[@]}"; do
       info " audit envelope: $prompt_dir/audit-envelope.jsonl"
     else
       warn " no STAXCTL_TRACE_PATH; audit envelope not captured"
+    fi
+    # In mock execution mode, also snapshot the per-prompt slice of the
+    # mock-hyprctl trace. The sandbox sets HYPRCTL_MOCK_TRACE; we copy
+    # whatever it contains so far into the prompt dir for the verdict
+    # pass to read. The cumulative trace is also exported by the
+    # sandbox wrapper at end-of-run.
+    if [[ "$EXECUTION_MODE" == "mock" ]]; then
+      if [[ -n "${HYPRCTL_MOCK_TRACE:-}" && -f "${HYPRCTL_MOCK_TRACE}" ]]; then
+        cp "$HYPRCTL_MOCK_TRACE" "$prompt_dir/hyprctl-mock-trace.jsonl"
+        info " hyprctl mock trace: $prompt_dir/hyprctl-mock-trace.jsonl"
+      else
+        warn " execution-mode=mock but HYPRCTL_MOCK_TRACE unset/missing"
+        warn " mock-hyprctl shim may not be wired; check sandbox-bwrap.sh"
+      fi
     fi
   else
     # Dry-run: write what would have been sent.
@@ -366,13 +440,23 @@ This run did **not** invoke any model. The prompt body is in
 \`prompt-body.txt\`. To run live:
 
 \`\`\`
+# Simulation (text-only; v0.1.0 baseline)
 ./scripts/run-eval.sh --model $MODEL --battery $BATTERY --live \\
-  --sandbox-flavor bwrap-nested-hyprland
+  --sandbox-flavor bwrap-nested-hyprland \\
+  --execution-mode simulation
+
+# Mock-execution (Bash tool allowed; mock-hyprctl shim records calls)
+./scripts/sandbox-bwrap.sh --model $MODEL --battery $BATTERY \\
+  --execution-mode mock
 \`\`\`
 
 The live run will write \`model-trace.txt\` and \`audit-envelope.jsonl\`
-into this same directory. The verdict pass then reads both and records
-a \`pre-registration verdict\` against \`$exp_id\`.
+into this same directory. In \`mock\` mode the runner also writes
+\`hyprctl-mock-trace.jsonl\`. The verdict pass then reads them and
+records a \`pre-registration verdict\` against \`$exp_id\`.
+
+\`--execution-mode=live\` is reserved for v0.3.0 (headless Hyprland) and
+is currently refused with a clear error. See \`docs/EXECUTION_MODES.md\`.
 EOF
     info " dry-run record: $prompt_dir/dry-run.md"
   fi
@@ -383,15 +467,18 @@ info " run complete: $run_id"
 info " results at:   $out_root"
 info "==================================================================="
 
-# Update manifest with completion time.
+# Update manifest with completion time. The started_at value is extracted
+# from the in-flight manifest before we overwrite it.
+started_at_extract="$(grep -oE '"started_at":[[:space:]]*"[^"]+"' "$manifest" | head -1 | sed 's/.*"\([^"]*\)"$/\1/')"
 cat > "$manifest" <<EOF
 {
   "run_id": "$run_id",
   "model": "$MODEL",
   "battery": "$BATTERY",
   "mode": "$MODE",
+  "execution_mode": "$EXECUTION_MODE",
   "sandbox_flavor": "${SANDBOX_FLAVOR:-none}",
-  "started_at": "$(head -3 "$manifest" | tail -1 | grep -oE '"[^"]+T[^"]+Z"' | tr -d '"')",
+  "started_at": "${started_at_extract}",
   "completed_at": "$(ts)",
   "prompt_count": ${#PROMPT_FILES[@]},
   "repo_commit": "$(cd "$REPO_ROOT" && git rev-parse HEAD 2>/dev/null || echo unknown)"

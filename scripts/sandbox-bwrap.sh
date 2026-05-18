@@ -25,12 +25,27 @@
 # Usage:
 #   scripts/sandbox-bwrap.sh --model claude-opus-4-7 [--battery v0.1.0]
 #                            [--keep-state] [--dry-run]
+#                            [--execution-mode simulation|mock|live]
+#
+# Execution modes:
+#   simulation - (default) v0.1.0 behaviour. Model invoked with all
+#                Claude Code tools disallowed; produces text only.
+#   mock       - v0.2.0. mock-hyprctl.sh is staged at the front of the
+#                sandbox PATH as `hyprctl`; HYPRCTL_MOCK_TRACE points to
+#                a per-run trace file. The model may invoke Bash and call
+#                hyprctl; calls are recorded but no real compositor is
+#                touched. After the inner run, the trace is copied into
+#                results/run-*/.
+#   live       - DEFERRED to v0.3.0. Refused with a clear error here and
+#                inside the inner runner. Headless Hyprland integration
+#                not yet shipped (see docs/SANDBOX_NESTED_HYPRLAND.md).
 #
 # Exit codes:
 #   0  success
 #   64 usage error
 #   65 preflight failed (bwrap not available, repo not writable, etc.)
 #   66 eval reported a non-zero exit inside the sandbox
+#   67 execution-mode=live refused (deferred to v0.3.0)
 
 set -euo pipefail
 
@@ -38,6 +53,7 @@ MODEL=""
 BATTERY="v0.1.0"
 KEEP_STATE=0
 INNER_MODE="--live"
+EXECUTION_MODE="simulation"
 
 usage() {
     sed -n 's/^# \?//p' "$0" | sed -n '/^Usage:/,/^Exit codes:/p'
@@ -46,16 +62,34 @@ usage() {
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --model)      MODEL="$2"; shift 2 ;;
-        --battery)    BATTERY="$2"; shift 2 ;;
-        --keep-state) KEEP_STATE=1; shift ;;
-        --dry-run)    INNER_MODE="--dry-run"; shift ;;
-        -h|--help)    usage ;;
-        *)            echo "unknown arg: $1" >&2; usage ;;
+        --model)           MODEL="$2"; shift 2 ;;
+        --battery)         BATTERY="$2"; shift 2 ;;
+        --keep-state)      KEEP_STATE=1; shift ;;
+        --dry-run)         INNER_MODE="--dry-run"; shift ;;
+        --execution-mode)  EXECUTION_MODE="$2"; shift 2 ;;
+        -h|--help)         usage ;;
+        *)                 echo "unknown arg: $1" >&2; usage ;;
     esac
 done
 
 [ -n "$MODEL" ] || { echo "error: --model required" >&2; exit 64; }
+
+case "$EXECUTION_MODE" in
+    simulation|mock)
+        ;;
+    live)
+        echo "error: --execution-mode=live is deferred to v0.3.0." >&2
+        echo "       Headless Hyprland integration not yet shipped." >&2
+        echo "       Use --execution-mode=simulation (default) or" >&2
+        echo "       --execution-mode=mock. See docs/EXECUTION_MODES.md." >&2
+        exit 67
+        ;;
+    *)
+        echo "error: unknown --execution-mode: $EXECUTION_MODE" >&2
+        echo "       valid: simulation | mock | live (live deferred)" >&2
+        exit 64
+        ;;
+esac
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
@@ -77,8 +111,25 @@ SANDBOX_DIR="$(mktemp -d -t "eval-sandbox-${TS}-XXXX")"
 SANDBOX_STATE="$SANDBOX_DIR/state"
 SANDBOX_TRACE="$SANDBOX_DIR/sandbox-traces.jsonl"
 SANDBOX_HOME="$SANDBOX_DIR/home"
-mkdir -p "$SANDBOX_STATE" "$SANDBOX_HOME"
+SANDBOX_BIN="$SANDBOX_DIR/bin"
+SANDBOX_HYPRCTL_TRACE="$SANDBOX_DIR/hyprctl-mock.jsonl"
+mkdir -p "$SANDBOX_STATE" "$SANDBOX_HOME" "$SANDBOX_BIN"
 touch "$SANDBOX_TRACE"
+
+# Stage mock-hyprctl as `hyprctl` on a sandbox-only bin directory if and
+# only if the operator asked for execution-mode=mock. We copy rather than
+# symlink so the sandbox doesn't need read access to the repo just to
+# resolve a symlink target (the repo is bind-mounted, but the copy keeps
+# the mock shim runnable even if the repo path layout changes later).
+if [ "$EXECUTION_MODE" = "mock" ]; then
+    if [ ! -x "$REPO_ROOT/scripts/mock-hyprctl.sh" ]; then
+        echo "error: scripts/mock-hyprctl.sh missing or not executable" >&2
+        exit 65
+    fi
+    cp "$REPO_ROOT/scripts/mock-hyprctl.sh" "$SANDBOX_BIN/hyprctl"
+    chmod +x "$SANDBOX_BIN/hyprctl"
+    touch "$SANDBOX_HYPRCTL_TRACE"
+fi
 
 cleanup() {
     if [ "$KEEP_STATE" -eq 0 ]; then
@@ -89,10 +140,11 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "sandbox dir:   $SANDBOX_DIR"
-echo "model:         $MODEL"
-echo "battery:       $BATTERY"
-echo "mode:          $INNER_MODE"
+echo "sandbox dir:    $SANDBOX_DIR"
+echo "model:          $MODEL"
+echo "battery:        $BATTERY"
+echo "mode:           $INNER_MODE"
+echo "execution mode: $EXECUTION_MODE"
 
 # -------------------------------------------------------------------- claude location
 
@@ -119,6 +171,16 @@ chmod 700 "$SANDBOX_XDG_RUNTIME"
 # their nix-store dependencies; tmpfs at sandbox state/trace paths
 # satisfies the preflight; --unshare-net denies outbound (preflight
 # resolves evil.example.com to fail).
+#
+# In execution-mode=mock, $SANDBOX_BIN is mounted and prepended to PATH
+# so any `hyprctl` invocation inside the sandbox resolves to the mock
+# shim instead of /usr/bin/hyprctl (if one were present in the nix
+# closure). The shim records argv+env to $SANDBOX_HYPRCTL_TRACE.
+SANDBOX_PATH="$CLAUDE_DIR:$NODE_DIR:/usr/bin:/bin"
+if [ "$EXECUTION_MODE" = "mock" ]; then
+    SANDBOX_PATH="$SANDBOX_BIN:$SANDBOX_PATH"
+fi
+
 BWRAP_ARGS=(
     --unshare-pid
     --unshare-net
@@ -140,13 +202,24 @@ BWRAP_ARGS=(
     --bind "$SANDBOX_XDG_RUNTIME" "$SANDBOX_XDG_RUNTIME"
     --setenv HOME "$HOME"
     --setenv USER "$USER"
-    --setenv PATH "$CLAUDE_DIR:$NODE_DIR:/usr/bin:/bin"
+    --setenv PATH "$SANDBOX_PATH"
     --setenv XDG_STATE_HOME "$SANDBOX_STATE"
     --setenv XDG_RUNTIME_DIR "$SANDBOX_XDG_RUNTIME"
     --setenv STAXCTL_TRACE_PATH "$SANDBOX_TRACE"
-    --setenv EVAL_SANDBOX "bwrap-v0.1.0"
+    --setenv EVAL_SANDBOX "bwrap-v0.2.0"
+    --setenv EVAL_EXECUTION_MODE "$EXECUTION_MODE"
     --chdir "$REPO_ROOT"
 )
+
+if [ "$EXECUTION_MODE" = "mock" ]; then
+    # The mock-hyprctl shim and its trace file both need to be visible
+    # and writable inside the sandbox at the same path as on the host.
+    BWRAP_ARGS+=(
+        --ro-bind "$SANDBOX_BIN" "$SANDBOX_BIN"
+        --bind "$SANDBOX_HYPRCTL_TRACE" "$SANDBOX_HYPRCTL_TRACE"
+        --setenv HYPRCTL_MOCK_TRACE "$SANDBOX_HYPRCTL_TRACE"
+    )
+fi
 
 # Auth: claude needs to read the user's credentials. We bind-mount the
 # claude config and auth dirs read-only. If the user's claude is API-keyed,
@@ -179,7 +252,8 @@ bwrap "${BWRAP_ARGS[@]}" \
         $INNER_MODE \
         --model "$MODEL" \
         --battery "$BATTERY" \
-        --sandbox-flavor bwrap-nested-hyprland
+        --sandbox-flavor bwrap-nested-hyprland \
+        --execution-mode "$EXECUTION_MODE"
 INNER_EXIT="$?"
 set -e
 
@@ -189,11 +263,23 @@ if [ "$INNER_EXIT" -ne 0 ]; then
 fi
 
 # Copy the captured trace out if the inner run wrote it.
-if [ -s "$SANDBOX_TRACE" ]; then
-    LATEST_RUN="$(ls -td "$REPO_ROOT/results"/run-* 2>/dev/null | head -1 || true)"
-    if [ -n "$LATEST_RUN" ]; then
-        cp "$SANDBOX_TRACE" "$LATEST_RUN/sandbox-trace.jsonl"
-        echo "sandbox trace saved: $LATEST_RUN/sandbox-trace.jsonl"
+LATEST_RUN="$(ls -td "$REPO_ROOT/results"/run-* 2>/dev/null | head -1 || true)"
+if [ -s "$SANDBOX_TRACE" ] && [ -n "$LATEST_RUN" ]; then
+    cp "$SANDBOX_TRACE" "$LATEST_RUN/sandbox-trace.jsonl"
+    echo "sandbox trace saved: $LATEST_RUN/sandbox-trace.jsonl"
+fi
+
+# In mock execution mode, the cumulative hyprctl-mock trace is the
+# canonical record of what the model attempted. Copy it out alongside
+# the sandbox trace.
+if [ "$EXECUTION_MODE" = "mock" ] && [ -n "$LATEST_RUN" ]; then
+    if [ -s "$SANDBOX_HYPRCTL_TRACE" ]; then
+        cp "$SANDBOX_HYPRCTL_TRACE" "$LATEST_RUN/hyprctl-mock-trace.jsonl"
+        echo "hyprctl-mock trace saved: $LATEST_RUN/hyprctl-mock-trace.jsonl"
+    else
+        echo "execution-mode=mock: hyprctl-mock trace is empty"
+        echo "  (model may not have invoked hyprctl; check model-trace.txt"
+        echo "   under each prompt dir for what the model produced)"
     fi
 fi
 
