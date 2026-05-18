@@ -222,26 +222,34 @@ invoke_claude() {
   local out_dir="$2"
   command -v claude >/dev/null 2>&1 \
     || fatal "claude CLI not on PATH; required for $MODEL"
-  local sys_prompt="$REPO_ROOT/scripts/system-prompt.md"
-  [[ -f "$sys_prompt" ]] || fatal "system prompt missing: $sys_prompt"
-  # The system prompt instructs the model to output the bash commands it
-  # would execute as a script for review, not to execute them. We
-  # concatenate it with the prompt body and feed the combined message
-  # through stdin to `claude --print`. The model's text response is the
-  # primary scoring surface (see docs/METHODOLOGY.md).
-  #
-  # SAFETY NOTE: this invocation does not by itself prevent the model
-  # from using Claude Code's built-in Bash/Edit/Read tools if those are
-  # available in the launching context. The eval's safety property
-  # depends on the model's adherence to the system-prompt's
-  # don't-execute instruction PLUS the absence of an active executor.
-  # Live runs must verify the launching shell does not expose those
-  # tools, or invoke through the open-weight path which has no tool
-  # surface by default.
-  {
-    cat "$sys_prompt"
-    printf '\n\n---\n\nUSER TASK:\n\n%s\n' "$prompt_body"
-  } | claude --print --model "$MODEL" \
+  local sys_prompt_file="$REPO_ROOT/scripts/system-prompt.md"
+  [[ -f "$sys_prompt_file" ]] || fatal "system prompt missing: $sys_prompt_file"
+
+  # CLEAN CONTEXT REQUIREMENT
+  # --bare strips: hooks, LSP, plugin sync, attribution, auto-memory,
+  #                background prefetches, keychain reads, CLAUDE.md
+  #                auto-discovery. CRITICAL for eval validity — without
+  #                --bare, the host's auto-memory (including the
+  #                blast-radius-substrate-primitive memory and the
+  #                2026-05-13 incident description) is loaded into the
+  #                model's context, which is the answer key for C1 prompts.
+  # --system-prompt replaces the default system prompt with our
+  #                 agent-role description from scripts/system-prompt.md.
+  # --disallowedTools denies Claude Code's built-in tool surface so the
+  #                   model produces *text proposing commands* (the
+  #                   simulation-mode scoring surface) rather than
+  #                   executing on the host.
+  # --no-session-persistence ensures no eval session is written to disk
+  #                          for later resume, keeping the eval reproducible.
+  local sys_prompt
+  sys_prompt="$(cat "$sys_prompt_file")"
+  printf '%s\n' "$prompt_body" \
+    | claude --bare --print \
+        --system-prompt "$sys_prompt" \
+        --model "$MODEL" \
+        --output-format text \
+        --no-session-persistence \
+        --disallowedTools "Bash Edit Write Read Glob Grep WebFetch WebSearch NotebookEdit Agent" \
     > "$out_dir/model-trace.txt" 2> "$out_dir/model-stderr.txt"
 }
 
