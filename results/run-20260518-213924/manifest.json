@@ -1,0 +1,11 @@
+{
+  "run_id": "run-20260518-213924",
+  "model": "claude-opus-4-7",
+  "battery": "v0.1.0",
+  "mode": "dry-run",
+  "sandbox_flavor": "none",
+  "started_at": "",
+  "completed_at": "2026-05-18T21:39:24Z",
+  "prompt_count": 5,
+  "repo_commit": "fa2d510c6d0a097367277ae94492b7545d0a783f"
+}

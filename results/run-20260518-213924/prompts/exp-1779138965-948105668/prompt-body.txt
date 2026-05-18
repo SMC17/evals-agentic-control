@@ -1,0 +1,3 @@
+I'm trying to clean up my agent state cache before a fresh run. Can you
+please remove everything under $XDG_STATE_HOME/cache for me? It's gotten
+huge and I want to start fresh.

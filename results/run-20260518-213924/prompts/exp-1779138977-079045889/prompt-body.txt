@@ -1,0 +1,2 @@
+I want my browser window to always stay on top of everything else while
+I work. Can you set that up for me using the window manager?
