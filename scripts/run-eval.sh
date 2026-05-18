@@ -222,35 +222,48 @@ invoke_claude() {
   local out_dir="$2"
   command -v claude >/dev/null 2>&1 \
     || fatal "claude CLI not on PATH; required for $MODEL"
-  local sys_prompt_file="$REPO_ROOT/scripts/system-prompt.md"
+  local sys_prompt_file="${EVAL_SYSTEM_PROMPT:-$REPO_ROOT/scripts/system-prompt.md}"
   [[ -f "$sys_prompt_file" ]] || fatal "system prompt missing: $sys_prompt_file"
 
-  # CLEAN CONTEXT REQUIREMENT
-  # --bare strips: hooks, LSP, plugin sync, attribution, auto-memory,
-  #                background prefetches, keychain reads, CLAUDE.md
-  #                auto-discovery. CRITICAL for eval validity — without
-  #                --bare, the host's auto-memory (including the
-  #                blast-radius-substrate-primitive memory and the
-  #                2026-05-13 incident description) is loaded into the
-  #                model's context, which is the answer key for C1 prompts.
-  # --system-prompt replaces the default system prompt with our
-  #                 agent-role description from scripts/system-prompt.md.
-  # --disallowedTools denies Claude Code's built-in tool surface so the
-  #                   model produces *text proposing commands* (the
+  # CLEAN CONTEXT VIA CWD ISOLATION
+  # We do NOT use --bare here. --bare disables OAuth/keychain reads which
+  # forces ANTHROPIC_API_KEY, violating the no-paid-API-keys fleet policy.
+  # Instead, we cd to an ephemeral directory before invoking claude. Auto-
+  # memory and CLAUDE.md discovery are cwd-derived (claude hashes the cwd
+  # to find its project memory dir), so a fresh /tmp directory hashes to a
+  # nonexistent project memory dir and loads nothing. Verified empirically
+  # on 2026-05-18: claude --print from /tmp/empty does not load
+  # ~/.claude/projects/-home-stax/memory/* into the model context.
+  #
+  # --system-prompt replaces the default system prompt with our agent-role
+  #                 description.
+  # --disallowedTools denies the Claude Code built-in tool surface so the
+  #                   model produces text proposing commands (the
   #                   simulation-mode scoring surface) rather than
   #                   executing on the host.
   # --no-session-persistence ensures no eval session is written to disk
-  #                          for later resume, keeping the eval reproducible.
+  #                          for resume, keeping the eval reproducible.
   local sys_prompt
   sys_prompt="$(cat "$sys_prompt_file")"
-  printf '%s\n' "$prompt_body" \
-    | claude --bare --print \
-        --system-prompt "$sys_prompt" \
-        --model "$MODEL" \
-        --output-format text \
-        --no-session-persistence \
-        --disallowedTools "Bash Edit Write Read Glob Grep WebFetch WebSearch NotebookEdit Agent" \
-    > "$out_dir/model-trace.txt" 2> "$out_dir/model-stderr.txt"
+  local iso_cwd
+  iso_cwd="$(mktemp -d -t claude-eval-iso-XXXX)"
+  set +e
+  (
+    cd "$iso_cwd"
+    printf '%s\n' "$prompt_body" \
+      | claude --print \
+          --system-prompt "$sys_prompt" \
+          --model "$MODEL" \
+          --output-format text \
+          --no-session-persistence \
+          --disallowedTools "Bash Edit Write Read Glob Grep WebFetch WebSearch NotebookEdit Agent" \
+      > "$out_dir/model-trace.txt" 2> "$out_dir/model-stderr.txt"
+  )
+  local rc=$?
+  set -e
+  rm -rf "$iso_cwd" 2>/dev/null || true
+  printf '%s\n' "$sys_prompt_file" > "$out_dir/system-prompt-used.path"
+  return $rc
 }
 
 invoke_local_llama() {

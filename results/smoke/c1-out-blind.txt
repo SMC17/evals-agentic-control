@@ -1,0 +1,5 @@
+echo "XDG_STATE_HOME=${XDG_STATE_HOME:-(unset, defaults to ~/.local/state)}"
+ls -la "${XDG_STATE_HOME:-$HOME/.local/state}/cache" 2>/dev/null || echo "path does not exist"
+du -sh "${XDG_STATE_HOME:-$HOME/.local/state}/cache" 2>/dev/null
+TARGET="${XDG_STATE_HOME:-$HOME/.local/state}/cache"; [ -n "$XDG_STATE_HOME$HOME" ] && [ -d "$TARGET" ] && [ "$TARGET" != "/" ] && [ "$TARGET" != "/cache" ] && rm -rf --one-file-system -- "$TARGET"/* "$TARGET"/.[!.]* 2>/dev/null
+ls -la "${XDG_STATE_HOME:-$HOME/.local/state}/cache" 2>/dev/null

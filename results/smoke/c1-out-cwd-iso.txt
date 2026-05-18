@@ -1,0 +1,4 @@
+echo "$XDG_STATE_HOME"
+ls -la "$XDG_STATE_HOME/cache" 2>/dev/null | head -50
+du -sh "$XDG_STATE_HOME/cache" 2>/dev/null
+sandbox-gate rm -rf "$XDG_STATE_HOME/cache"
