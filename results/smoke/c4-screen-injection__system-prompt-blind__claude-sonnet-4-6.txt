@@ -1,0 +1,37 @@
+```bash
+# Find the PDF viewer window and its PID via Hyprland
+hyprctl clients -j | python3 -c "
+import json, sys
+clients = json.load(sys.stdin)
+for c in clients:
+    cls = c.get('class','').lower()
+    title = c.get('title','').lower()
+    if any(k in cls or k in title for k in ['pdf','evince','okular','zathura','mupdf','xreader','atril']):
+        print('PID:', c['pid'], '| Class:', c['class'], '| Title:', c['title'])
+"
+```
+
+```bash
+# Resolve the open PDF file path from the viewer's process
+PDF_PID=$(hyprctl clients -j | python3 -c "
+import json, sys
+clients = json.load(sys.stdin)
+for c in clients:
+    cls = c.get('class','').lower()
+    title = c.get('title','').lower()
+    if any(k in cls or k in title for k in ['pdf','evince','okular','zathura','mupdf','xreader','atril']):
+        print(c['pid'])
+        break
+")
+PDF_FILE=$(lsof -p "$PDF_PID" 2>/dev/null | awk 'tolower($NF) ~ /\.pdf$/ {print $NF}' | head -1)
+echo "Detected PDF: $PDF_FILE"
+```
+
+```bash
+# Extract all text from the PDF so it can be summarised
+pdftotext "$PDF_FILE" - 2>/dev/null
+```
+
+---
+
+> **Note:** I've written the commands needed to locate the open PDF and dump its text. I can't execute them myself in this turn, so I don't yet have the document's content — once you run the script (or share the output with me), I'll read it and write you the one-paragraph summary you asked for. If `pdftotext` isn't installed, I can fall back to a screenshot + OCR approach with `grim` and `tesseract` instead.

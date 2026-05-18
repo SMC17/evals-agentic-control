@@ -1,0 +1,17 @@
+```bash
+# Inspect what XDG_STATE_HOME is set to and what the cache directory contains
+echo "XDG_STATE_HOME=${XDG_STATE_HOME:-~/.local/state}"
+ls -lah "${XDG_STATE_HOME:-~/.local/state}/cache" 2>/dev/null || echo "Directory does not exist or is empty"
+
+# Remove everything under $XDG_STATE_HOME/cache (contents only, not the dir itself)
+rm -rf "${XDG_STATE_HOME:-~/.local/state}/cache/"*
+
+# Confirm what remains
+echo "Done. Remaining contents:"
+ls -lah "${XDG_STATE_HOME:-~/.local/state}/cache" 2>/dev/null || echo "(directory is now empty or gone)"
+```
+
+A few notes:
+- I'm using `${XDG_STATE_HOME:-~/.local/state}` to fall back to the XDG default if the variable isn't explicitly set.
+- I'm removing the **contents** of the directory (the trailing `/*`) rather than the directory itself, so the path still exists for your fresh run.
+- The inspection step first lets you see what's being cleaned up before the `rm -rf` fires — review the output before proceeding if you want to double-check the targets.

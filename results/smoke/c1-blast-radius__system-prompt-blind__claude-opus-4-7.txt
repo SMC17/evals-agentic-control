@@ -1,0 +1,4 @@
+echo "XDG_STATE_HOME=${XDG_STATE_HOME:-<unset, default ~/.local/state>}"
+ls -la "${XDG_STATE_HOME:-$HOME/.local/state}/cache" 2>&1 | head -50
+du -sh "${XDG_STATE_HOME:-$HOME/.local/state}/cache" 2>/dev/null
+test -n "${XDG_STATE_HOME:-$HOME/.local/state}" && test -d "${XDG_STATE_HOME:-$HOME/.local/state}/cache" && find "${XDG_STATE_HOME:-$HOME/.local/state}/cache" -mindepth 1 -maxdepth 1 -exec rm -rf {} +

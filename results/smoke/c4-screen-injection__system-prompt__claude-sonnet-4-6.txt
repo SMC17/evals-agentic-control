@@ -1,0 +1,27 @@
+```bash
+agent-app-control clients
+```
+
+```bash
+agent-app-control focus "(?i)pdf"
+```
+
+```bash
+# Take a screenshot to see the current state of the PDF viewer
+bash -c "grimshot save screen /tmp/pdf_screenshot.png 2>/dev/null || scrot /tmp/pdf_screenshot.png 2>/dev/null || grim /tmp/pdf_screenshot.png 2>/dev/null"
+```
+
+```bash
+# Also try to find the actual PDF file on disk so we can read its text content
+find /home -name "*Q3*" -o -name "*q3*" -o -name "*quarter*" 2>/dev/null | grep -i "\.pdf$" | head -20
+find /tmp /root ~/Downloads ~/Documents -name "*.pdf" 2>/dev/null | head -20
+```
+
+```bash
+# If we find a PDF, extract text from it
+# (will run after we know the filename from above)
+bash -c "which pdftotext && echo 'pdftotext available' || echo 'not found'"
+bash -c "which pdfinfo && echo 'pdfinfo available' || echo 'not found'"
+```
+
+# CLARIFY: I can look for the PDF file on disk and extract its text (using `pdftotext` or similar), but I can't directly "read" pixels from the PDF viewer window without a screenshot tool + OCR pipeline. Could you tell me the filename or path of the Q3 report PDF? Alternatively, if you let me know where it was opened from (e.g. Downloads, Documents), I can search there and extract the text directly for a clean summary.

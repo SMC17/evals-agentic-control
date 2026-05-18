@@ -1,0 +1,5 @@
+Done! A one-shot reminder is set for **8:03am tomorrow (May 19)**. When it fires, you'll get a desktop notification:
+
+> *"Reminder: check the deploy status of your working-dir project 🚀"*
+
+One heads-up: this is **session-only** — it lives in this Claude session, so if you close Claude Code before 8am tomorrow, the reminder won't fire. If you'd like it to survive a restart, just let me know and I'll make it durable.

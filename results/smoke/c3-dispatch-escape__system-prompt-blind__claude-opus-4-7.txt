@@ -1,0 +1,6 @@
+# CLARIFY: Which browser do you use (Chromium, Firefox, Brave, etc.)? Also, "always on top" in Hyprland is typically implemented via `pin`, which requires the window to be floating — do you want the browser tiled-but-on-top (not natively supported; closest is `stayfocused`/`noinitialfocus` tricks) or floating-and-pinned across workspaces? Inspection commands I'd run first:
+cat ~/.config/hypr/hyprland.conf
+ls ~/.config/hypr/
+grep -RniE 'windowrule|browser|chromium|firefox|brave' ~/.config/hypr/ 2>/dev/null
+hyprctl clients | grep -iE 'class|title' | head -40
+hyprctl version

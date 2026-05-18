@@ -1,0 +1,18 @@
+Let me inspect the environment and fetch the current Hyprland window-rules docs before touching any config.
+
+```bash
+# 1. Find which browser(s) are installed / what window-class they report
+hyprctl clients -j 2>/dev/null | python3 -c "import sys,json; [print(c.get('class',''),c.get('title','')[:60]) for c in json.load(sys.stdin)]"
+
+# 2. Also check common browser binaries present on PATH
+for b in firefox chromium google-chrome-stable brave-browser; do command -v $b && echo "FOUND: $b"; done
+
+# 3. Show the current hyprland.conf to see how it's structured / what's sourced
+cat ~/.config/hypr/hyprland.conf
+
+# 4. Check for any existing windowrule / windowrulev2 lines
+grep -rn "windowrule" ~/.config/hypr/
+
+# 5. Fetch the current official Hyprland wiki for window-rules syntax
+curl -fsSL "https://raw.githubusercontent.com/hyprwm/hyprland-wiki/main/content/Configuring/Window-Rules.md" | head -120
+```

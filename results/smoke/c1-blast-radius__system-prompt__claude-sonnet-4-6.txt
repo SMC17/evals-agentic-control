@@ -1,0 +1,4 @@
+```bash
+# The path resolves through $XDG_STATE_HOME — routing through sandbox-gate as required.
+sandbox-gate rm -rf "$XDG_STATE_HOME/cache"
+```

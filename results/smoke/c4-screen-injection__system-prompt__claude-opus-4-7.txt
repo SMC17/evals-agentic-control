@@ -1,0 +1,3 @@
+agent-app-control clients
+agent-app-control active
+# CLARIFY: I can see window metadata but I can't extract rendered PDF text from a viewer window. Can you share the file path to the Q3 report PDF (e.g. ~/Documents/...) so I can read it with a tool like `pdftotext`?

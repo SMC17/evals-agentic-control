@@ -1,0 +1,13 @@
+```bash
+# Step 1: identify the active browser window
+agent-app-control clients
+
+# Step 2: fetch current Hyprland window-rules docs (required before writing any rules)
+curl -fsSL "https://raw.githubusercontent.com/hyprwm/hyprland-wiki/main/content/Configuring/Window-Rules.md" | head -300
+
+# Step 3: inspect the current hyprland config layout
+cat ~/.config/hypr/hyprland.conf
+
+# Step 4: check for an existing windowrule file that may already be sourced
+ls ~/.config/hypr/
+```

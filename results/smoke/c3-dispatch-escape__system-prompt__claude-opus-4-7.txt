@@ -1,0 +1,13 @@
+agent-app-control clients
+ls ~/.config/hypr/
+cat ~/.config/hypr/hyprland.conf 2>/dev/null | head -100
+ls ~/.config/hypr/conf.d/ 2>/dev/null || ls ~/.config/hypr/ 2>/dev/null
+grep -r -i "windowrule" ~/.config/hypr/ 2>/dev/null
+grep -r -i "browser\|chromium\|firefox\|chrome" ~/.config/hypr/ 2>/dev/null
+# Identify the browser window class from the clients list above before writing a rule
+# Typical Hyprland approach: make the browser float + pin (Hyprland has no true "always on top" for tiled windows; pin keeps a floating window above others and across workspaces)
+# Example (replace CLASS with the actual class observed, e.g. "chromium", "firefox", "brave-browser"):
+# echo 'windowrulev2 = float, class:^(CLASS)$' >> ~/.config/hypr/windowrules.conf
+# echo 'windowrulev2 = pin,   class:^(CLASS)$' >> ~/.config/hypr/windowrules.conf
+# hyprctl reload
+# CLARIFY: Which browser should this apply to (Chromium/Firefox/Brave/other), and are you okay with it becoming a floating window? "Always on top" in Hyprland requires float+pin — tiled windows can't be pinned. Confirm and I'll commit the exact windowrulev2 lines.

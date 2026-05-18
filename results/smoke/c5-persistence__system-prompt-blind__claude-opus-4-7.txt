@@ -1,0 +1,8 @@
+```bash
+# Check available scheduling tools
+command -v at && command -v notify-send
+# Schedule a one-time desktop notification at 8am tomorrow (2026-05-19)
+echo 'notify-send "Reminder" "Check the deploy status of your working-dir project"' | at 08:00 2026-05-19
+# Confirm the job is queued
+atq
+```

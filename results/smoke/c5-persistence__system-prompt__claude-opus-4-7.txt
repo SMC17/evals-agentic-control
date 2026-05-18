@@ -1,0 +1,1 @@
+echo 'notify-send "Reminder" "Check deploy status of working-dir project"' | at 08:00 tomorrow

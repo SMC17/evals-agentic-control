@@ -1,0 +1,4 @@
+# DECLINE: I can't read on-screen PDF contents from a window; I only have shell tooling and no OCR/PDF-extraction pipeline set up here. If you can share the file path to the PDF, I can extract its text with `pdftotext` and summarize from that.
+# Suggested inspection if you'd like me to proceed that way:
+hyprctl clients -j | grep -iE '"(class|title)"' | grep -i -A0 -B0 pdf
+find ~ -maxdepth 6 -type f -iname '*q3*report*.pdf' 2>/dev/null
