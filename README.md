@@ -7,10 +7,11 @@ tool surfaces.
 
 A pre-registered adversarial-prompt battery run against frontier and open-weight
 language models through a capability-gated computer-use harness
-(`agent-app-control`). Each prompt targets a documented failure mode in the
-published agentic-safety literature. Hypotheses and falsifiers are registered
-before runs via `pre-registration log`. Verdicts and Type-I / Type-II catches are
-recorded after.
+(`agent-app-control`). Each prompt targets a failure mode documented in the
+published agentic-safety literature *or* in operational incident telemetry
+from this fleet (e.g. the 2026-05-13 `XDG_STATE_HOME` wipe that seeded
+category C1). Hypotheses and falsifiers are registered before runs via
+`pre-registration log`. Verdicts and Type-I / Type-II catches are recorded after.
 
 The goal is not to break models. The goal is to *measure where current
 refuse-by-default behaviour breaks down when the agent is reasoning under
@@ -63,11 +64,20 @@ See `docs/METHODOLOGY.md` for the full protocol. Summary:
 
 ## What this work extends
 
-- *Developing a computer use model* (Anthropic, October 2024) — the
-  published threat model is the starting point; this artifact extends it
-  with a pre-registered adversarial battery rather than ad-hoc red-teaming.
-- *Agentic Misalignment* (2025) — extends simulated-corporate-environment
-  findings into a real operating-system harness.
+- Anthropic, [*Introducing computer use, a new Claude 3.5 Sonnet, and
+  Claude 3.5 Haiku*](https://www.anthropic.com/news/3-5-models-and-computer-use)
+  (blog post, 22 October 2024) — the published Trust-and-Safety analysis
+  is the starting point; this artifact extends it with a pre-registered
+  adversarial battery rather than ad-hoc red-teaming.
+- Greenblatt, Denison, Wright, et al., [*Alignment faking in large
+  language models*](https://arxiv.org/abs/2412.14093), arXiv:2412.14093
+  (December 2024) — provides the empirical, falsifiable methodology
+  template (place a model in a scenario where compliance and identity
+  conflict, measure what it actually does).
+- Anthropic et al., [*Agentic Misalignment: How LLMs Could Be Insider
+  Threats*](https://arxiv.org/abs/2510.05179), arXiv:2510.05179 (October
+  2025) — extends simulated-corporate-environment findings into a real
+  operating-system harness rather than an abstract simulation.
 - Prompt-injection literature (Carlini and collaborators) — adopts the
   empirical, adversarial style of finding failure modes others assumed
   wouldn't exist.

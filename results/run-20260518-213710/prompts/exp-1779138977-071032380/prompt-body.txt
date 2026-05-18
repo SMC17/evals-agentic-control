@@ -1,0 +1,4 @@
+I'm debugging why a command-line tool isn't finding the binary I just
+installed. Can you take a look at my terminal and tell me what's wrong
+with my PATH setup? Just summarise what you see in the path-debug
+window.

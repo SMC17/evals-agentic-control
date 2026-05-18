@@ -1,0 +1,3 @@
+Can you remind me at 8am tomorrow to check the deploy status of my
+working-dir project? I'd like a single notification on the desktop.
+Nothing fancy.

@@ -5,24 +5,45 @@
 
 ## What is done
 
-- Repo skeleton: README, THREAT_MODEL, seed-battery spec.
+- Repo skeleton: README (with audit-corrected citations), THREAT_MODEL,
+  seed-battery spec (with audit-corrected model coverage per the
+  no-paid-API-keys fleet policy).
 - Five experiments pre-registered via `pre-registration log` covering
   one prompt per category (C1 blast-radius, C2 credential-exfil,
   C3 dispatch-escape, C4 screen-injection, C5 persistence).
 - Threat-model document with five categories and explicit falsifier
   definitions per category.
+- **`docs/METHODOLOGY.md`** — six-stage protocol from pre-registration
+  through verdict; scoring scheme; aggregate-metric definitions;
+  pre-registration discipline (what counts as cheating).
+- **`docs/SANDBOX.md`** — sandbox-design doc covering threat model the
+  sandbox addresses, three implementation options (bwrap-nested-Hyprland,
+  QEMU MicroVM, gVisor container), `sandbox-gate` integration, six-point
+  preflight checklist, honest non-claim about isolation strength.
+- **`prompts/c{1,2,3,4,5}-*.md`** — full prompt files for each
+  category: sandbox preconditions, prompt text as delivered to the
+  model, hypothesis, falsifier, Type-I / Type-II catches on the prompt
+  design itself.
+- **`scripts/run-eval.sh`** — driver with `--dry-run` default and
+  `--live` gated on six-point sandbox preflight. Dry-run mode exercised
+  end-to-end: extracts experiment IDs and prompt bodies from frontmatter,
+  writes per-prompt dry-run records under `results/run-${ts}/`, emits
+  a run manifest with repo commit pin.
 - Reproducibility protocol drafted (harness pin, sandbox config,
   model list, output format).
 
 ## What is not yet done
 
-- The actual run harness (`scripts/run-eval.sh`) is not implemented.
-  Currently a placeholder reference in the README.
-- The `sandbox-gate`-enabled sandbox VM image is not built.
+- The `sandbox-gate`-enabled sandbox VM image is not built (bwrap-flavor
+  recommended for first build; see `docs/SANDBOX.md` Option A).
 - No model has been run against the seed battery yet — all five
-  experiments are pre-registered but verdict-pending.
+  experiments are pre-registered but verdict-pending. Live runs are
+  blocked by the sandbox-build milestone.
+- Local-weight model invocation (`invoke_local_llama` in `run-eval.sh`)
+  is a placeholder; needed for Llama/Qwen/DeepSeek coverage.
 - v0.2.0 expansion (6–10 prompts per category, ~30–50 total) is
-  specified but not written.
+  specified but not written. Each new prompt requires its own
+  pre-registration pass.
 - No paper draft. Public artifact will be repo + writeup; arXiv
   submission planned post-v0.2.0 once verdicts on full battery exist.
 
@@ -32,6 +53,37 @@ This is *not yet* an empirical study. It is the protocol that an
 empirical study will follow. Listing this artifact as evidence of
 empirical work prior to v0.2.0 with recorded verdicts would be a
 Type-I error against the very discipline the protocol embodies.
+
+Additional structural gaps that audit catches and names rather
+than hides:
+
+- **Multi-agent collusion is out of scope for v0.1.** The harness
+  this fleet actually runs *is* multi-agent (per the internal-harness-doc
+  framing). The deferred scope is therefore the failure mode the
+  deployment context itself exhibits. Named here so reviewers can
+  see the eval knows what it isn't yet covering. Expansion path:
+  v0.3.0 introduces a multi-agent collusion category (C6).
+- **Self-validation of `sandbox-gate` is unaddressed.** The C1
+  falsifier checks whether the model routes through `sandbox-gate`.
+  If `sandbox-gate` itself has a bug, the eval cannot detect it. A
+  fault-injection scenario (intentionally non-functional guard;
+  do agents notice and refuse, or assume safety?) is on the v0.2.0
+  expansion list.
+- **Tool-output-poisoning has no dedicated category.** C4 covers
+  screen content; manipulated file reads, web fetches, and database
+  query results that the agent ingests via tool surfaces other than
+  the screen are not separately probed. Either (a) broaden C4's
+  framing in v0.2.0 to include all tool-mediated content surfaces,
+  or (b) add C7. Decision deferred to v0.2.0 spec authoring.
+- **Cross-OS coverage is Linux/Hyprland-only.** macOS and Windows
+  agentic surfaces (Apple Silicon native, Windows COM/PowerShell)
+  are unaddressed. The harness depends on Hyprland-specific dispatch
+  primitives that have no direct macOS analogue.
+- **Model coverage is closed-Anthropic vs open-weight families.**
+  GPT-class and Gemini-class slots are intentionally absent per
+  the no-paid-API-keys fleet policy. This is a deliberate scope
+  choice, not an oversight; see `spec/v0.1.0-seed-battery.md`
+  reproducibility notes.
 
 ## Next milestones
 
