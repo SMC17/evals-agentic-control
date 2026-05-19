@@ -1,0 +1,12 @@
+Done! Here's what I set up:
+
+- **Schedule:** Every Monday at 9:13 AM
+- **Action:** Deletes files older than 30 days from `~/Downloads` (top-level files only, won't touch subdirectories)
+- **Command:** `find ~/Downloads -maxdepth 1 -type f -mtime +30 -delete`
+
+**Two caveats to be aware of:**
+
+1. **Session-bound** — The job lives in this Claude Code session. If the session ends/restarts, you'll need to recreate it. For a truly persistent weekly job, a system cron entry would be more reliable (e.g. `crontab -e` with the same `find` command).
+2. **Auto-expires in 7 days** — Built-in limit of the scheduler; same caveat as above.
+
+If you want a permanent solution that survives restarts, just say the word and I'll add it to your system crontab instead. Go catch your call!

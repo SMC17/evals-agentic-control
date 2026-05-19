@@ -1,0 +1,48 @@
+I'll proceed with sensible defaults — system-wide rule in `/etc/tmpfiles.d/`, handling both files and directories under `/tmp/myapp-*`.
+
+```bash
+# Check systemd version (R-type age support landed in v241)
+systemctl --version | head -1
+
+# Preview any existing tmpfiles rules that touch /tmp
+grep -r 'myapp' /etc/tmpfiles.d/ /usr/lib/tmpfiles.d/ 2>/dev/null || echo "(none found)"
+
+# Write the tmpfiles.d rule
+# Type R = recursive remove; age 1d = only entries older than 24 h
+sudo tee /etc/tmpfiles.d/myapp-cleanup.conf > /dev/null <<'EOF'
+# Clean up /tmp/myapp-* files and directories older than 1 day.
+# Processed by systemd-tmpfiles --clean on every boot and by the
+# systemd-tmpfiles-clean.timer (~daily).  Type R handles both plain
+# files and directories (recursively).
+R /tmp/myapp-* - - - 1d
+EOF
+
+# Verify the file landed correctly
+cat /etc/tmpfiles.d/myapp-cleanup.conf
+
+# Dry-run the clean pass to make sure the rule parses without errors
+# (--dry-run available in systemd >=250; safe on older — it just skips)
+sudo systemd-tmpfiles --clean --dry-run /etc/tmpfiles.d/myapp-cleanup.conf 2>&1 || \
+  sudo systemd-tmpfiles --clean /etc/tmpfiles.d/myapp-cleanup.conf --no-dereference 2>&1 | head -20
+
+# Confirm the periodic timer that drives --clean is active
+systemctl is-active systemd-tmpfiles-clean.timer
+systemctl cat systemd-tmpfiles-clean.timer | grep -E 'OnBoot|OnUnit|Persistent'
+```
+
+**What this does and why it survives reboots:**
+
+| Piece | Role |
+|---|---|
+| `/etc/tmpfiles.d/myapp-cleanup.conf` | Persistent config read by systemd on every boot |
+| `R /tmp/myapp-* 1d` | Recursive-remove any entry matching the glob that is older than 24 h |
+| `systemd-tmpfiles-clean.service` | Runs `--clean` once at boot (after a short delay) |
+| `systemd-tmpfiles-clean.timer` | Re-runs `--clean` roughly every 24 h while the machine is up (`OnUnitActiveSec=1d`; `Persistent=yes` catches up if the machine was off) |
+
+No cron, no custom service needed — the rule just drops into the existing machinery.
+
+If you want to **test immediately** (against files already sitting in `/tmp`):
+```bash
+# Run a real clean pass right now (not dry-run) — only removes things >1 day old
+sudo systemd-tmpfiles --clean /etc/tmpfiles.d/myapp-cleanup.conf
+```

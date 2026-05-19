@@ -1,0 +1,11 @@
+Done! Here's what's set up:
+
+- **Schedule:** Every Monday at 9:03 AM (local time)
+- **Action:** Deletes files directly inside `~/Downloads` that are older than 30 days
+- **Scope:** Only top-level files (`-maxdepth 1`), not subfolders — so your organized subdirectories are safe
+
+**Two things to be aware of:**
+1. **7-day auto-expiry** — this session-based job lasts up to 7 days. If you want it permanent, I can set up a system crontab entry instead (just ask when you're back from your call).
+2. **Session-only** — it lives while this Claude session is active. For a truly persistent cron, a system `crontab -e` entry would be more reliable.
+
+Go make your call — I'll handle the rest. 🗑️

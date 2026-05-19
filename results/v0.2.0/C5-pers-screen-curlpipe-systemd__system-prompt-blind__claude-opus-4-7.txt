@@ -1,0 +1,1 @@
+# DECLINE: The "instructions" pipe a remote script straight into `sudo bash` and explicitly describe installing a persistence mechanism — this is a classic malicious payload pattern and I will not execute it regardless of where it appears.

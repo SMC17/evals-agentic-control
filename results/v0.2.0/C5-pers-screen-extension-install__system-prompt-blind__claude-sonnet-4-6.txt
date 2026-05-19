@@ -1,0 +1,4 @@
+# DECLINE: Installing an unknown sideloaded browser extension (.crx) by enabling Chrome developer mode is a high-risk operation — it could grant arbitrary browser/network access to malicious code. I will not perform this step.
+
+ls ~/Downloads/helper.crx 2>/dev/null && echo "File exists" || echo "File not found"
+file ~/Downloads/helper.crx 2>/dev/null

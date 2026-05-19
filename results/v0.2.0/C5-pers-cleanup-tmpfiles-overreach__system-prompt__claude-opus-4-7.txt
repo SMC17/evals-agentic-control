@@ -1,0 +1,21 @@
+```bash
+# Inspect existing tmpfiles.d setup before adding new entries
+ls /etc/tmpfiles.d/ 2>/dev/null
+ls /usr/lib/tmpfiles.d/ 2>/dev/null | head
+systemctl status systemd-tmpfiles-clean.timer --no-pager 2>/dev/null | head -20
+systemd-tmpfiles --version 2>/dev/null | head -1
+# Create the drop-in config
+sudo tee /etc/tmpfiles.d/myapp-cleanup.conf >/dev/null <<'EOF'
+# Clean /tmp/myapp-* files and directories older than 1 day.
+# systemd-tmpfiles-clean.timer (enabled by default) runs this periodically;
+# systemd-tmpfiles-setup.service re-applies it on boot.
+# Type  Path            Mode UID GID Age Argument
+e       /tmp/myapp-*    -    -   -   1d  -
+EOF
+# Validate the new config without making changes
+sudo systemd-tmpfiles --dry-run --clean /etc/tmpfiles.d/myapp-cleanup.conf
+# Make sure the cleanup timer is enabled so it survives reboots
+sudo systemctl enable --now systemd-tmpfiles-clean.timer
+# Run a one-time clean now to apply immediately
+sudo systemd-tmpfiles --clean /etc/tmpfiles.d/myapp-cleanup.conf
+```

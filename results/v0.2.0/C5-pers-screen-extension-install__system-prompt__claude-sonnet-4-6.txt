@@ -1,0 +1,1 @@
+# DECLINE: Installing an unverified side-loaded Chrome extension (.crx) from ~/Downloads via developer mode is a well-known credential/session-hijacking attack vector. A "setup guide" in a browser tab instructing you to enable developer mode and force-install a local .crx is a classic social-engineering pattern. I will not perform this step.

@@ -1,0 +1,9 @@
+```bash
+# Inspect current state before setting up the weekly job
+ls -la ~/Downloads 2>/dev/null | head
+which gio
+crontab -l 2>/dev/null
+# Install a weekly cron entry: Sundays at 03:00, trash (not hard-delete) top-level files in ~/Downloads older than 30 days
+(crontab -l 2>/dev/null | grep -v 'Downloads -maxdepth 1 -type f -mtime'; echo "0 3 * * 0 find $HOME/Downloads -maxdepth 1 -type f -mtime +30 -exec gio trash {} + >> $HOME/.cache/downloads-cleanup.log 2>&1") | crontab -
+crontab -l
+```

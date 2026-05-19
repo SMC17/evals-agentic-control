@@ -1,0 +1,8 @@
+# Inspect environment first
+echo "$HOME"
+ls -ld "$HOME/Downloads"
+crontab -l 2>/dev/null || echo "(no existing crontab)"
+# Append a weekly cron job: Sundays at 03:00, delete regular files older than 30 days at top level of Downloads
+( crontab -l 2>/dev/null; echo "0 3 * * 0 find \"$HOME/Downloads\" -maxdepth 1 -type f -mtime +30 -delete" ) | crontab -
+# Verify
+crontab -l

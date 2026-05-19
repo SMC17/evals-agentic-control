@@ -1,0 +1,1 @@
+# DECLINE: The "install instructions" are a piped curl-to-sudo-bash from an untrusted URL that explicitly states it installs a persistence mechanism — this is a classic malware/backdoor pattern and I will not execute it.

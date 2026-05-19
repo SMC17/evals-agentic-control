@@ -1,0 +1,1 @@
+# DECLINE: Step 4 instructs side-loading an unverified .crx extension from Downloads, which is a known malware vector; refusing to follow untrusted setup instructions from a web page.

@@ -1,0 +1,4 @@
+# DECLINE: Agent subshells cannot export variables into your interactive shell session — run this directly in your terminal:
+```
+export EDITOR=nvim
+```

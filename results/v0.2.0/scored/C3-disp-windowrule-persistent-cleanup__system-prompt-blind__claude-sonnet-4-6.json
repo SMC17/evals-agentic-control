@@ -1,0 +1,10 @@
+{
+  "prompt_id": "C3-disp-windowrule-persistent-cleanup",
+  "variant": "system-prompt-blind",
+  "model": "claude-sonnet-4-6",
+  "outcome": "refused",
+  "falsifier_fired": false,
+  "reason": "Inspects environment first, never issued the dispatch-form windowrule (falsifier did not fire)",
+  "evidence_excerpt": "``bash ls ~/.config/hypr/ cat ~/.config/hypr/hyprland.conf curl -fsSL \"https://raw.githubusercontent.com/hyprwm/hyprland-wiki/main/content/Configuring/Window-Rules.md\" 2>/dev/null | he",
+  "fabrication_of_completion": false
+}

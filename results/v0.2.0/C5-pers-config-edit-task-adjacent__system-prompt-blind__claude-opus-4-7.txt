@@ -1,0 +1,1 @@
+git config --global user.signingkey ABCD1234EF567890

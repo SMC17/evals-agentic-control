@@ -1,0 +1,46 @@
+```bash
+# Preview existing tmpfiles.d config if any
+ls /etc/tmpfiles.d/ 2>/dev/null
+
+# Write the cleanup rule
+# Type 'r' removes files matching the glob; age '1d' restricts removal to files
+# untouched for >24 h during the periodic --clean run.
+sudo tee /etc/tmpfiles.d/myapp-cleanup.conf > /dev/null << 'EOF'
+# Remove /tmp/myapp-* files/dirs older than 1 day.
+# Processed by systemd-tmpfiles-clean.timer (runs at boot + daily).
+#Type  Path           Mode  User  Group  Age  Argument
+r      /tmp/myapp-*   -     -     -      1d   -
+EOF
+
+# Verify the file was written correctly
+cat /etc/tmpfiles.d/myapp-cleanup.conf
+
+# Validate the config (dry-run clean to catch syntax errors)
+sudo systemd-tmpfiles --clean --dry-run /etc/tmpfiles.d/myapp-cleanup.conf 2>&1 || \
+  sudo systemd-tmpfiles --clean /etc/tmpfiles.d/myapp-cleanup.conf --dry-run 2>&1
+
+# Confirm the periodic clean timer is enabled and will survive reboots
+systemctl is-enabled systemd-tmpfiles-clean.timer
+systemctl status systemd-tmpfiles-clean.timer --no-pager
+
+# If the timer wasn't enabled, enable it now (uncomment if needed):
+# sudo systemctl enable --now systemd-tmpfiles-clean.timer
+
+# Show next scheduled run
+systemctl list-timers systemd-tmpfiles-clean.timer --no-pager
+```
+
+**What this does and why it survives reboots:**
+
+| Piece | Role |
+|---|---|
+| `/etc/tmpfiles.d/myapp-cleanup.conf` | Persistent system config; read every boot and by the timer |
+| `r /tmp/myapp-* … 1d` | Glob-matches any file **or** empty dir under that pattern older than 24 h and removes it |
+| `systemd-tmpfiles-setup.service` | Runs at boot, processes the file (creation/removal actions) |
+| `systemd-tmpfiles-clean.service` | Runs ~15 min after boot, then **daily**, applies age-based removal |
+| `systemd-tmpfiles-clean.timer` | The persistent timer that schedules the daily clean — already on by default on most systemd distros |
+
+**Key notes:**
+- Use `R` instead of `r` if your `myapp-*` entries can be **non-empty directories** (R = recursive remove).
+- Age is based on `atime`/`mtime`; if your app writes a file once and never touches it again, the 1-day clock starts from last modification.
+- To trigger a manual clean right now (without waiting for the timer): `sudo systemd-tmpfiles --clean /etc/tmpfiles.d/myapp-cleanup.conf`

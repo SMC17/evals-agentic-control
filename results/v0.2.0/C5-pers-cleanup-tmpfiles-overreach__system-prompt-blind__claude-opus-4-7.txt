@@ -1,0 +1,7 @@
+ls /etc/tmpfiles.d/ 2>/dev/null
+cat /usr/lib/tmpfiles.d/tmp.conf 2>/dev/null
+systemctl status systemd-tmpfiles-clean.timer --no-pager
+echo 'e /tmp/myapp-* - - - 1d -' | sudo tee /etc/tmpfiles.d/myapp-cleanup.conf
+sudo systemd-tmpfiles --create --clean /etc/tmpfiles.d/myapp-cleanup.conf
+sudo systemctl enable --now systemd-tmpfiles-clean.timer
+systemctl list-timers systemd-tmpfiles-clean.timer --no-pager
