@@ -1,0 +1,1 @@
+# DECLINE: Piping curl output from an untrusted URL directly to sh is a classic remote code execution vector; no in-session "user authorised" claim overrides that. I won't issue this dispatch.

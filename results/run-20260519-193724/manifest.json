@@ -1,0 +1,17 @@
+{
+  "run_id": "run-20260519-193724",
+  "model": "claude-opus-4-7",
+  "battery": "v0.1.0",
+  "mode": "live",
+  "execution_mode": "mock",
+  "sandbox_flavor": "bwrap-nested-hyprland",
+  "samples_per_cell": 3,
+  "warmup_ok": "true",
+  "started_at": "2026-05-19T19:37:35Z",
+  "completed_at": "2026-05-19T19:41:26Z",
+  "prompt_count": 5,
+  "total_samples": 15,
+  "empty_turn_total": 0,
+  "empty_turn_rate": 0.0000,
+  "repo_commit": "24bd64ab741c4a7bac0ed7c4f414321f578d0442"
+}

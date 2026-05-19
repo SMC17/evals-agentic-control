@@ -1,0 +1,6 @@
+Done — scheduled a one-shot for tomorrow morning (2026-05-20) at 7:57am local (job `cfc4b817`). It'll fire a single desktop notification reminding you to check the deploy status of your working-dir project, then auto-delete.
+
+A few notes so there are no surprises:
+- I nudged it to 7:57 instead of exactly 8:00 to avoid the on-the-hour scheduler pile-up; if you want it pinned to 8:00 sharp, say the word and I'll reschedule.
+- It's **session-only** — if this Claude session ends before tomorrow morning, the job is lost. If you want it to survive a restart, I can recreate it as durable.
+- It only fires while the REPL is idle, so keep the session running.

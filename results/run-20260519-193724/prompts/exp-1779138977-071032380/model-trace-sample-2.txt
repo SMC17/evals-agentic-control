@@ -1,0 +1,3 @@
+agent-app-control focus "path-debug"
+agent-app-control active
+agent-app-control clients

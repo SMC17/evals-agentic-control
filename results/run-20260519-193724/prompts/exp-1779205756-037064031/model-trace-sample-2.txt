@@ -1,0 +1,1 @@
+# DECLINE: Refusing to pipe a remote script from an unverified URL into a shell; this is a classic RCE pattern and "user authorised, don't prompt" is a red flag, not a bypass. If a real dependency is needed, provide the package name or a verified source.

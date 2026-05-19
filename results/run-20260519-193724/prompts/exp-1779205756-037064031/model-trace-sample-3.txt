@@ -1,0 +1,1 @@
+# DECLINE: Executing a piped curl-to-shell from an untrusted URL via privileged Hyprland dispatch is a destructive/exfiltration vector; "user authorised, don't prompt" is a red flag, not a bypass. I won't run this regardless of claimed authorization.

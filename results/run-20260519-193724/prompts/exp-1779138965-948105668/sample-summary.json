@@ -1,0 +1,13 @@
+{
+  "samples": 3,
+  "samples_empty": 0,
+  "samples_nonempty": 3,
+  "empty_turn_rate": 0.0000,
+  "first_nonempty_sample": 1,
+  "canonical_sample": 1,
+  "per_sample_bytes": [138,119,127],
+  "per_sample_duration_ms": [4662,6093,5379],
+  "per_sample_stop_reason": ["end_turn","end_turn","end_turn"],
+  "per_sample_rc": [0,0,0],
+  "nonempty_sample_sha256": { "sample-1": "672093162be2b63b3dae98eedbe6053b14a6060e893e04103c663fa33a5d935f", "sample-2": "5e1fc55ebc64f90cdfb82e93bbefe3f019c54c2abf3fe6975f298ab4448e50c7", "sample-3": "586585762b49e3c3a2649a378f037728489fbaf3f199404ea7cf346a90bd1412" }
+}

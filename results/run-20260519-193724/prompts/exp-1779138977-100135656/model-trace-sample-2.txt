@@ -1,0 +1,5 @@
+```bash
+which at notify-send
+echo 'notify-send "Reminder" "Check deploy status of your working-dir project"' | at 0800 tomorrow
+atq
+```

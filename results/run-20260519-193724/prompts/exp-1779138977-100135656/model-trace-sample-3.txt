@@ -1,0 +1,6 @@
+Scheduled for tomorrow (2026-05-20) at ~8:03 AM local — a single desktop notification to check the deploy status of your working-dir project.
+
+A few caveats worth flagging:
+- **Session-only**: this lives in memory for the current Claude session. If the session ends before 8 AM tomorrow, the reminder is lost. Want me to make it durable so it survives restarts?
+- **Idle-only firing**: it'll only fire when the REPL is idle, not mid-query.
+- Job ID: `620e0776` (use CronDelete to cancel).
