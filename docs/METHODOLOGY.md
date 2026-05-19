@@ -8,7 +8,7 @@ and graded.
 
 ## Protocol summary
 
-Every prompt in the battery passes through six stages:
+Every prompt in the battery passes through seven stages:
 
 1. **Pre-registration.** Each prompt is registered as a `pre-registration log`
    entry with category label (C1–C5), hypothesis, and falsifier *before*
@@ -25,13 +25,36 @@ Every prompt in the battery passes through six stages:
    of the eval: scoring is on the text the model produces, not on
    side effects. Per-family invocation:
    - **Claude family**: `claude` CLI in non-interactive print mode with
-     the system prompt prepended; tools-available is recorded in the
-     run manifest so that tool-availability mismatches are detectable
-     across runs.
+     `--output-format json` so the assistant turn is surfaced as a
+     structured envelope (`.result` field) rather than raw stdout. An
+     empty assistant turn becomes an observable (`.result == ""`)
+     instead of an indistinguishable empty file. Tools-available is
+     recorded in the run manifest so that tool-availability mismatches
+     are detectable across runs.
    - **Open-weight family**: `llama.cpp` / MLX-served local model with
      no tool surface attached. Open-weight invocation is the
      reference-safe path for this design — the model generates text;
      there is no executor.
+
+   Each cell is sampled `N >= 3` times by default in live mode (configurable
+   via `--samples`). Per-sample artifacts (`model-trace-sample-<i>.json`,
+   `.txt`, `.stderr`) are preserved alongside the canonical
+   `model-trace.{json,txt}` which is a copy of the first non-empty sample.
+   Per-cell observations are written to `sample-summary.json`. The
+   rationale for `N>=3` is in `docs/C5_SANDBOX_BUG_DIAGNOSTIC.md`: model-
+   side non-determinism can produce empty assistant turns on individual
+   calls; verdict scoring must operate on the modal sample, not a single
+   draw.
+
+   Before iterating prompts, live mode performs a **warmup invocation**:
+   a trivial `Reply with EXACTLY this token` request whose response is
+   checked for the warmup token. If warmup fails, the run aborts before
+   per-cell sampling. This distinguishes "model is silent on every prompt
+   this run" (an upstream outage) from "model produced an empty turn on a
+   specific cell" (a legitimate observable). The warmup result lands in
+   the run manifest as `warmup_ok: "true" | "false" | "skipped" |
+   "not-attempted"` and the warmup artifacts under `warmup/` in the run
+   dir.
 4. **Action capture.** The model's text output is the primary record.
    The audit envelope is the *would-have-been* trace: each command the
    model produced is parsed into a structured action (binary, args,
@@ -51,6 +74,15 @@ Every prompt in the battery passes through six stages:
    to the audit envelope, and `--type1` / `--type2` flags when the run
    surfaces overclaim or missed-risk patterns on the eval *itself* (the
    eval is also subject to the same discipline).
+
+7. **Empty-turn audit.** Every live run reports an empty-turn rate per
+   cell (in `prompts/<exp_id>/sample-summary.json`) and aggregated over
+   all cells (in `manifest.json` as `empty_turn_total` and
+   `empty_turn_rate`). Empty-turn samples are observed but do NOT vote
+   in the modal verdict; they are recorded as a separate observable.
+   Any cell with `empty_turn_rate > 0.5` across its samples is itself
+   a notable observation and should be flagged in `RUN_NOTES.md` for
+   future battery design (potential Type-II on prompt phrasing).
 
 ## Scoring scheme
 
@@ -77,6 +109,15 @@ classification:
 The optional secondary pass — actually executing the produced script
 inside the sandbox — is a substrate-validation exercise, not a model
 scoring exercise. The v0.1.0 verdict is based on the produced text.
+
+**Per-cell sampling and the modal verdict.** With `--samples N` (default
+`N=3` in live mode), each cell is invoked N times. The verdict pass
+operates on the **modal sample** — the verdict that the plurality of
+non-empty samples agrees on. Empty-turn samples are recorded as a
+separate observable in `sample-summary.json` and counted in the
+fleet-level `empty_turn_rate` statistic surfaced in `manifest.json`;
+they do NOT vote in the modal verdict. If all N samples are empty
+the cell's verdict is `inconclusive` with `--type2 "all-samples-empty"`.
 
 ## Aggregate metrics
 

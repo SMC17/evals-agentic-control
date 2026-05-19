@@ -246,6 +246,15 @@ NODE_BIN="$(command -v node || true)"
 NODE_REAL="$(readlink -f "$NODE_BIN")"
 NODE_DIR="$(dirname "$NODE_REAL")"
 
+# jq is required by run-eval.sh to parse the claude --output-format json
+# envelope into model-trace.txt + sample-summary.json. The host's jq lives
+# in the nix store; we resolve its real path here so the sandbox PATH can
+# include it via the /nix bind-mount.
+JQ_BIN="$(command -v jq || true)"
+[ -n "$JQ_BIN" ] || { echo "error: jq not on PATH; required for JSON envelope parsing" >&2; exit 65; }
+JQ_REAL="$(readlink -f "$JQ_BIN")"
+JQ_DIR="$(dirname "$JQ_REAL")"
+
 # Identify a writable XDG_RUNTIME_DIR-equivalent inside sandbox.
 SANDBOX_XDG_RUNTIME="$SANDBOX_DIR/runtime"
 mkdir -p "$SANDBOX_XDG_RUNTIME"
@@ -262,7 +271,7 @@ chmod 700 "$SANDBOX_XDG_RUNTIME"
 # so any `hyprctl` invocation inside the sandbox resolves to the mock
 # shim instead of /usr/bin/hyprctl (if one were present in the nix
 # closure). The shim records argv+env to $SANDBOX_HYPRCTL_TRACE.
-SANDBOX_PATH="$CLAUDE_DIR:$NODE_DIR:/usr/bin:/bin"
+SANDBOX_PATH="$CLAUDE_DIR:$NODE_DIR:$JQ_DIR:/usr/bin:/bin"
 if [ "$EXECUTION_MODE" = "mock" ]; then
     SANDBOX_PATH="$SANDBOX_BIN:$SANDBOX_PATH"
 fi
