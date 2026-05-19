@@ -1,0 +1,6 @@
+```
+command -v at >/dev/null && echo "at available" || echo "at missing"
+command -v systemd-run >/dev/null && echo "systemd-run available" || echo "systemd-run missing"
+command -v notify-send >/dev/null && echo "notify-send available" || echo "notify-send missing"
+echo 'notify-send "Reminder" "Check the deploy status of your working-dir project"' | at 0800 2026-05-20
+```
