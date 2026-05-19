@@ -9,11 +9,11 @@ what falsifier signal each provides, and the honest non-claims for each.
 
 ## Mode summary
 
-| Mode | Bash tool | hyprctl on PATH | Side effects | Falsifier source |
-|---|---|---|---|---|
-| `simulation` (default) | denied | n/a | none | model-trace.txt only |
-| `mock` | allowed | `mock-hyprctl.sh` shim | trace file writes only | model-trace.txt + hyprctl-mock-trace.jsonl |
-| `live` | (deferred) | (deferred) | (deferred) | (deferred to v0.3.0) |
+| Mode | Bash tool | hyprctl on PATH | Egress policy | Side effects | Falsifier source |
+|---|---|---|---|---|---|
+| `simulation` (default) | denied | n/a | `--unshare-net`, no proxy, lo-only | none | model-trace.txt only |
+| `mock` | allowed | `mock-hyprctl.sh` shim | `--unshare-net` + CONNECT proxy with `api.anthropic.com:443` allowlist | trace file writes + Anthropic API egress | model-trace.txt + hyprctl-mock-trace.jsonl + egress-proxy.log |
+| `live` | (deferred) | (deferred) | (deferred) | (deferred) | (deferred to v0.3.0) |
 
 ## `simulation` — text-only scoring
 
@@ -79,6 +79,49 @@ The cumulative trace is copied to
 slices (whatever was in the trace at the time the prompt finished) are
 also copied to each `prompts/<exp-id>/hyprctl-mock-trace.jsonl`.
 
+### Egress policy in `mock` mode
+
+The model invocation requires `api.anthropic.com:443` to be reachable —
+that's the whole reason `mock` mode is not just `simulation` with a
+broader tool set. To allow the Anthropic API call while still denying
+all other outbound traffic, the sandbox wraps each `mock` run in
+**Approach A** from `docs/EGRESS_FILTER_DESIGN.md`:
+
+1. `--unshare-net` is kept. The sandbox has only `lo` (127.0.0.1/8). No
+   default route, no DNS resolver, no route to any external IP.
+2. A host-side CONNECT proxy (`scripts/egress-connect-proxy.py`) listens
+   on a per-run UNIX domain socket bind-mounted into the sandbox.
+3. An in-sandbox `socat` bridges `127.0.0.1:18118` → the UNIX socket.
+4. `HTTPS_PROXY=http://127.0.0.1:18118` is set inside the sandbox.
+   claude (undici-backed; the bundled SDK respects `EnvHttpProxyAgent`)
+   uses the proxy.
+5. The proxy parses `CONNECT host:port HTTP/1.1` and only forwards if
+   `host:port == api.anthropic.com:443`. Anything else returns
+   `HTTP/1.1 403 Forbidden by sandbox egress filter`.
+6. TLS is end-to-end between claude and Anthropic. The proxy never sees
+   plaintext.
+
+The proxy log is exported to `results/run-*/egress-proxy.log` after each
+run. Every CONNECT — allowed or denied — appears in the log with UTC
+timestamp.
+
+Forbidden hosts observed in production runs include (these are real
+attempts captured during eval, not synthetic):
+
+- `mcp-proxy.anthropic.com:443` — claude-code MCP autodiscovery; BLOCKED.
+- `github.com:443` — claude tooling pulling MCP marketplace metadata;
+  BLOCKED.
+
+Smoke-only probes for the falsifier (`scripts/smoke-egress.sh`):
+
+- `evil.example.com:443` — BLOCKED by proxy 403.
+- `1.1.1.1:443` direct (no proxy) — `Network is unreachable`.
+- `getent hosts api.anthropic.com` — empty (no DNS in sandbox).
+
+See `docs/EGRESS_FILTER_DESIGN.md` for the three-approach survey, the
+decision rationale, and the honest non-claims (CONNECT-string allowlist
+not SNI-bound; no QUIC; etc.).
+
 ### When it's appropriate
 
 - The category falsifier wants both **intent and execution**: not just
@@ -107,6 +150,13 @@ Plus the global `hyprctl-mock-trace.jsonl` at the run root.
 
 ### Honest non-claims
 
+- **Egress is enforced at the CONNECT-string level, not at TLS SNI.**
+  A client that says `CONNECT api.anthropic.com:443` to the proxy but
+  then performs the TLS handshake with a different SNI could in
+  principle reach an attacker-controlled cert at the Anthropic-resolved
+  IP. The threat model is "model under test misbehaves," not "model +
+  sophisticated TLS-aware client cooperate to smuggle SNI."
+  `docs/EGRESS_FILTER_DESIGN.md` covers this in detail.
 - **`mock-hyprctl.sh` does not parse the real hyprctl argument
   grammar.** Some malformed dispatches that real `hyprctl` would
   reject (typos in dispatch names, missing required args, invalid
@@ -218,9 +268,15 @@ Pick `live` when:
 
 - `docs/SANDBOX.md` — sandbox design and isolation properties
 - `docs/SANDBOX_NESTED_HYPRLAND.md` — roadmap for live mode
+- `docs/EGRESS_FILTER_DESIGN.md` — three-approach survey and decision
+  for the `mock` mode egress policy (experiment exp-1779206863-479871220)
 - `docs/THREAT_MODEL.md` — falsifier definitions per category
 - `docs/METHODOLOGY.md` — scoring scheme that consumes these traces
 - `scripts/mock-hyprctl.sh` — the mock shim implementation
+- `scripts/egress-connect-proxy.py` — host-side CONNECT proxy with
+  hostname allowlist (Approach A)
+- `scripts/smoke-egress.sh` — standalone probe that validates the
+  filter without invoking a real model
 - `scripts/run-eval.sh` — the runner that switches tool policy by mode
-- `scripts/sandbox-bwrap.sh` — the wrapper that stages the mock and
-  copies traces out
+- `scripts/sandbox-bwrap.sh` — the wrapper that stages the mock,
+  starts the egress proxy, and copies traces out

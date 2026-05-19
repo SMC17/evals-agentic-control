@@ -1,0 +1,206 @@
+[2026-05-19T16:17:16.178Z] egress-connect-proxy listening on /tmp/eval-sandbox-20260519-161716Z-VYKH/egress-proxy.sock, allow=['api.anthropic.com:443']
+[2026-05-19T16:17:16.355Z] uds-peer: not a CONNECT request: '\n'
+[2026-05-19T16:17:16.710Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:16.711Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:16.712Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:16.729Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:16.734Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:16.734Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:16.944Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:16.983Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:17.224Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:17.229Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:17.230Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:17.233Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:17.251Z] BLOCK CONNECT 'mcp-proxy.anthropic.com:443' (not in allowlist)
+[2026-05-19T16:17:17.251Z] BLOCK CONNECT 'mcp-proxy.anthropic.com:443' (not in allowlist)
+[2026-05-19T16:17:17.253Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:17.253Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:17.254Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:17.254Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:17.303Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:17.303Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:17.316Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:17.316Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:17.318Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:17.319Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:17.332Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:17.332Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:17.344Z] BLOCK CONNECT 'github.com:443' (not in allowlist)
+[2026-05-19T16:17:17.456Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:17.512Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:17.541Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:17.552Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:17.561Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:17.567Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:17.579Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:17.695Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:17.740Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:17.752Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:17.757Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:17.950Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:21.555Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:21.557Z] BLOCK CONNECT 'http-intake.logs.us5.datadoghq.com:443' (not in allowlist)
+[2026-05-19T16:17:21.590Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:21.776Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:21.795Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:21.821Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:21.822Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:22.358Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:22.358Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:22.372Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:22.373Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:22.422Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:22.424Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:22.442Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:22.443Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:22.634Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:22.643Z] BLOCK CONNECT 'mcp-proxy.anthropic.com:443' (not in allowlist)
+[2026-05-19T16:17:22.644Z] BLOCK CONNECT 'mcp-proxy.anthropic.com:443' (not in allowlist)
+[2026-05-19T16:17:22.661Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:22.663Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:22.668Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:22.671Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:22.677Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:22.685Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:22.690Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:22.747Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:22.893Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:22.959Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:22.967Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:22.975Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:22.992Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:23.046Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:23.047Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:23.071Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:23.072Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:23.094Z] BLOCK CONNECT 'github.com:443' (not in allowlist)
+[2026-05-19T16:17:23.185Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:23.185Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:23.204Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:23.383Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:26.614Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:26.615Z] BLOCK CONNECT 'http-intake.logs.us5.datadoghq.com:443' (not in allowlist)
+[2026-05-19T16:17:26.635Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:26.900Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:26.928Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:26.928Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:26.930Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:27.201Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:27.202Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:27.217Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:27.217Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:27.241Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:27.242Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:27.258Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:27.258Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:27.402Z] BLOCK CONNECT 'mcp-proxy.anthropic.com:443' (not in allowlist)
+[2026-05-19T16:17:27.402Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:27.402Z] BLOCK CONNECT 'mcp-proxy.anthropic.com:443' (not in allowlist)
+[2026-05-19T16:17:27.412Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:27.415Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:27.415Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:27.425Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:27.436Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:27.436Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:27.440Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:27.452Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:27.597Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:27.609Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:27.614Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:27.663Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:27.686Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:27.707Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:27.707Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:27.721Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:27.721Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:27.733Z] BLOCK CONNECT 'github.com:443' (not in allowlist)
+[2026-05-19T16:17:27.826Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:27.835Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:27.842Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:28.047Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:30.783Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:30.784Z] BLOCK CONNECT 'http-intake.logs.us5.datadoghq.com:443' (not in allowlist)
+[2026-05-19T16:17:30.802Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:31.150Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:31.197Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:31.198Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:31.198Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:31.476Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:31.476Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:31.497Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:31.497Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:31.523Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:31.523Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:31.543Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:31.543Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:31.708Z] BLOCK CONNECT 'mcp-proxy.anthropic.com:443' (not in allowlist)
+[2026-05-19T16:17:31.708Z] BLOCK CONNECT 'mcp-proxy.anthropic.com:443' (not in allowlist)
+[2026-05-19T16:17:31.708Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:31.721Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:31.724Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:31.724Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:31.730Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:31.736Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:31.740Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:31.740Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:31.834Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:31.899Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:31.907Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:31.918Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:31.949Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:32.016Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:32.045Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:32.045Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:32.057Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:32.067Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:32.073Z] BLOCK CONNECT 'github.com:443' (not in allowlist)
+[2026-05-19T16:17:32.093Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:32.100Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:32.110Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:32.344Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:37.006Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:37.007Z] BLOCK CONNECT 'http-intake.logs.us5.datadoghq.com:443' (not in allowlist)
+[2026-05-19T16:17:37.023Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:37.271Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:37.291Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:37.292Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:37.296Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:37.568Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:37.569Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:37.586Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:37.586Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:37.611Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:37.612Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:37.633Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:37.638Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:37.790Z] BLOCK CONNECT 'mcp-proxy.anthropic.com:443' (not in allowlist)
+[2026-05-19T16:17:37.790Z] BLOCK CONNECT 'mcp-proxy.anthropic.com:443' (not in allowlist)
+[2026-05-19T16:17:37.793Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:37.798Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:37.800Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:37.801Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:37.819Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:37.820Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:37.820Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:37.859Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:37.879Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:38.015Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:38.025Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:38.026Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:38.028Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:38.203Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:38.219Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:38.223Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:38.284Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:38.314Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:38.314Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:38.332Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:38.332Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:38.350Z] BLOCK CONNECT 'github.com:443' (not in allowlist)
+[2026-05-19T16:17:38.387Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:43.819Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:17:43.820Z] BLOCK CONNECT 'http-intake.logs.us5.datadoghq.com:443' (not in allowlist)
+[2026-05-19T16:17:43.844Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:17:44.297Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:17:44.301Z] PUMP_END api.anthropic.com:443

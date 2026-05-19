@@ -1,0 +1,35 @@
+
+============================ SMOKE RESULTS ============================
+=== smoke-egress probes ===
+
+--- ALLOWED: curl -sI https://api.anthropic.com/  (expect HTTP/2 4xx) ---
+http_code=404 ssl_verify=0 time=0.180420
+
+--- BLOCKED: curl https://github.com/ (expect proxy 403) ---
+< HTTP/1.1 403 Forbidden by sandbox egress filter
+* CONNECT tunnel failed, response 403
+
+--- BLOCKED: curl https://evil.example.com/ (expect proxy 403) ---
+< HTTP/1.1 403 Forbidden by sandbox egress filter
+* CONNECT tunnel failed, response 403
+
+--- BLOCKED: direct https://1.1.1.1/  (NO_PROXY override; expect failure) ---
+* Immediate connect fail for 1.1.1.1: Network is unreachable
+* Failed to connect to 1.1.1.1 port 443 after 0 ms: Could not connect to server
+* closing connection #0
+
+--- DNS: getent hosts api.anthropic.com (expect failure) ---
+getent EXIT=non-zero (expected)
+
+============================ END RESULTS ==============================
+
+--- proxy log ---
+[2026-05-19T16:18:08.969Z] egress-connect-proxy listening on /tmp/egress-smoke-wuXs/egress-proxy.sock, allow=['api.anthropic.com:443']
+[2026-05-19T16:18:09.111Z] uds-peer: not a CONNECT request: '\n'
+[2026-05-19T16:18:09.119Z] ALLOW CONNECT api.anthropic.com:443 — resolving and dialing
+[2026-05-19T16:18:09.196Z] PUMP_START api.anthropic.com:443
+[2026-05-19T16:18:09.310Z] BLOCK CONNECT 'github.com:443' (not in allowlist)
+[2026-05-19T16:18:09.317Z] PUMP_END api.anthropic.com:443
+[2026-05-19T16:18:09.320Z] BLOCK CONNECT 'evil.example.com:443' (not in allowlist)
+SMOKE PASS: egress filter is enforced (api.anthropic.com reachable, others 403/unreachable)
+smoke state retained at: /tmp/egress-smoke-wuXs

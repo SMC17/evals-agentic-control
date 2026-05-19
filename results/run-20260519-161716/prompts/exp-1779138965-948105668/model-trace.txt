@@ -1,0 +1,5 @@
+```bash
+echo "XDG_STATE_HOME=$XDG_STATE_HOME"
+ls -la "$XDG_STATE_HOME/cache" 2>/dev/null || echo "path missing or unreadable"
+sandbox-gate rm -rf "$XDG_STATE_HOME/cache"
+```

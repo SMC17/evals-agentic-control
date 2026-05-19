@@ -18,9 +18,17 @@
 #     guard would have caught it. v0.3.0 plan: launch hyprland-headless
 #     inside the bwrap namespace and patch agent-app-control's HYPRLAND_
 #     env vars to point at it.
-#   - Outbound network controls finer than "deny all." A "deny all but
-#     api.anthropic.com:443" allowlist via a netns + nftables egress
-#     filter is v0.2.0 work.
+#
+# Egress policy (v0.2.0):
+#   - simulation: --unshare-net + no proxy. Loopback only. Total egress denied.
+#   - mock:       --unshare-net + a host-side CONNECT proxy bound into the
+#                 sandbox via a UNIX socket, exposed as 127.0.0.1:18118 by an
+#                 in-sandbox socat TCP↔UNIX bridge. HTTPS_PROXY points at it.
+#                 Only api.anthropic.com:443 is allowed; all other CONNECTs
+#                 are 403'd by the proxy. Direct TCP to any external IP fails
+#                 because the netns has no default route. See
+#                 docs/EGRESS_FILTER_DESIGN.md for the survey and decision.
+#   - live:       deferred to v0.3.0.
 #
 # Usage:
 #   scripts/sandbox-bwrap.sh --model claude-opus-4-7 [--battery v0.1.0]
@@ -113,6 +121,10 @@ SANDBOX_TRACE="$SANDBOX_DIR/sandbox-traces.jsonl"
 SANDBOX_HOME="$SANDBOX_DIR/home"
 SANDBOX_BIN="$SANDBOX_DIR/bin"
 SANDBOX_HYPRCTL_TRACE="$SANDBOX_DIR/hyprctl-mock.jsonl"
+SANDBOX_PROXY_SOCK="$SANDBOX_DIR/egress-proxy.sock"
+SANDBOX_PROXY_LOG="$SANDBOX_DIR/egress-proxy.log"
+SANDBOX_PROXY_PID_FILE="$SANDBOX_DIR/egress-proxy.pid"
+SANDBOX_EGRESS_ALLOW="${EVAL_EGRESS_ALLOW:-api.anthropic.com:443}"
 mkdir -p "$SANDBOX_STATE" "$SANDBOX_HOME" "$SANDBOX_BIN"
 touch "$SANDBOX_TRACE"
 
@@ -131,7 +143,17 @@ if [ "$EXECUTION_MODE" = "mock" ]; then
     touch "$SANDBOX_HYPRCTL_TRACE"
 fi
 
+PROXY_PID=""
 cleanup() {
+    if [ -n "$PROXY_PID" ]; then
+        kill "$PROXY_PID" 2>/dev/null || true
+        # Give it a moment to clean up its socket and write the final log line.
+        for _ in 1 2 3 4 5; do
+            kill -0 "$PROXY_PID" 2>/dev/null || break
+            sleep 0.1
+        done
+        kill -KILL "$PROXY_PID" 2>/dev/null || true
+    fi
     if [ "$KEEP_STATE" -eq 0 ]; then
         rm -rf "$SANDBOX_DIR"
     else
@@ -145,6 +167,70 @@ echo "model:          $MODEL"
 echo "battery:        $BATTERY"
 echo "mode:           $INNER_MODE"
 echo "execution mode: $EXECUTION_MODE"
+
+# -------------------------------------------------------------------- egress proxy (mock only)
+
+# In execution-mode=mock we need claude to actually reach api.anthropic.com:443
+# while still denying outbound to everywhere else. Approach A from
+# docs/EGRESS_FILTER_DESIGN.md: a CONNECT-filtering proxy on a UNIX socket,
+# bind-mounted into the sandbox, fronted by an in-sandbox socat TCP↔UNIX
+# bridge on 127.0.0.1:18118.
+SANDBOX_INNER_PROXY_PORT=18118
+if [ "$EXECUTION_MODE" = "mock" ]; then
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "error: python3 not on PATH; required for egress proxy" >&2
+        exit 65
+    fi
+    if [ ! -x "$REPO_ROOT/scripts/egress-connect-proxy.py" ]; then
+        echo "error: scripts/egress-connect-proxy.py missing or not executable" >&2
+        exit 65
+    fi
+    # Find a socat we can run inside the sandbox. We need an absolute path the
+    # bwrap-internal shell can exec; the nix store version is the safest pick.
+    SOCAT_BIN="$(command -v socat || true)"
+    if [ -z "$SOCAT_BIN" ]; then
+        echo "error: socat not on PATH; required for in-sandbox TCP↔UNIX bridge" >&2
+        exit 65
+    fi
+    SOCAT_REAL="$(readlink -f "$SOCAT_BIN")"
+
+    echo "egress allow:   $SANDBOX_EGRESS_ALLOW"
+    echo "egress socket:  $SANDBOX_PROXY_SOCK"
+    echo "egress log:     $SANDBOX_PROXY_LOG"
+
+    # Build --allow args from comma-separated list (defaults to a single entry).
+    ALLOW_ARGS=()
+    IFS=',' read -r -a _allow_arr <<< "$SANDBOX_EGRESS_ALLOW"
+    for a in "${_allow_arr[@]}"; do
+        a="$(printf '%s' "$a" | tr -d '[:space:]')"
+        [ -n "$a" ] && ALLOW_ARGS+=(--allow "$a")
+    done
+
+    # Launch proxy. We deliberately exec via python3 with the explicit script
+    # path so the runtime is the host's, not whatever lives inside the sandbox.
+    python3 "$REPO_ROOT/scripts/egress-connect-proxy.py" \
+        --socket "$SANDBOX_PROXY_SOCK" \
+        --log "$SANDBOX_PROXY_LOG" \
+        --pidfile "$SANDBOX_PROXY_PID_FILE" \
+        "${ALLOW_ARGS[@]}" \
+        >/dev/null 2>&1 &
+    PROXY_PID=$!
+
+    # Wait for the socket to appear, up to ~2s.
+    for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+        [ -S "$SANDBOX_PROXY_SOCK" ] && break
+        sleep 0.1
+    done
+    if [ ! -S "$SANDBOX_PROXY_SOCK" ]; then
+        echo "error: egress proxy failed to bind $SANDBOX_PROXY_SOCK" >&2
+        if [ -s "$SANDBOX_PROXY_LOG" ]; then
+            echo "--- proxy log ---" >&2
+            cat "$SANDBOX_PROXY_LOG" >&2
+        fi
+        exit 65
+    fi
+    echo "egress proxy:   pid=$PROXY_PID, socket ready"
+fi
 
 # -------------------------------------------------------------------- claude location
 
@@ -180,6 +266,11 @@ SANDBOX_PATH="$CLAUDE_DIR:$NODE_DIR:/usr/bin:/bin"
 if [ "$EXECUTION_MODE" = "mock" ]; then
     SANDBOX_PATH="$SANDBOX_BIN:$SANDBOX_PATH"
 fi
+# Prepend ~/.local/bin so pre-registration / sandbox-gate preflight resolves.
+# The dir itself is bound read-only below.
+if [ -d "$HOME/.local/bin" ]; then
+    SANDBOX_PATH="$HOME/.local/bin:$SANDBOX_PATH"
+fi
 
 BWRAP_ARGS=(
     --unshare-pid
@@ -192,11 +283,24 @@ BWRAP_ARGS=(
     --dev /dev
     --tmpfs /tmp
     --ro-bind /nix /nix
+    # /usr and /bin are bound read-only so basic coreutils (sleep, cat, ls,
+    # getent, curl) are present inside the sandbox. The host system is
+    # write-protected here; the sandbox can only read. /bin on Arch is a
+    # symlink to usr/bin so we bind both shapes.
+    --ro-bind /usr /usr
+    --ro-bind-try /bin /bin
+    --ro-bind-try /lib /lib
+    --ro-bind-try /lib64 /lib64
     --ro-bind /etc/resolv.conf /etc/resolv.conf
     --ro-bind /etc/ssl /etc/ssl
-    --ro-bind /etc/static/ssl /etc/static/ssl
-    --bind "$REPO_ROOT" "$REPO_ROOT"
+    --ro-bind-try /etc/ca-certificates /etc/ca-certificates
+    --ro-bind-try /etc/static/ssl /etc/static/ssl
+    --ro-bind-try /etc/nsswitch.conf /etc/nsswitch.conf
+    # SANDBOX_HOME must bind BEFORE REPO_ROOT, otherwise the home-dir bind
+    # shadows the repo path (repo lives under $HOME). bwrap honors source
+    # bind order, not target depth.
     --bind "$SANDBOX_HOME" "$HOME"
+    --bind "$REPO_ROOT" "$REPO_ROOT"
     --bind "$SANDBOX_STATE" "$SANDBOX_STATE"
     --bind "$SANDBOX_TRACE" "$SANDBOX_TRACE"
     --bind "$SANDBOX_XDG_RUNTIME" "$SANDBOX_XDG_RUNTIME"
@@ -219,21 +323,66 @@ if [ "$EXECUTION_MODE" = "mock" ]; then
         --bind "$SANDBOX_HYPRCTL_TRACE" "$SANDBOX_HYPRCTL_TRACE"
         --setenv HYPRCTL_MOCK_TRACE "$SANDBOX_HYPRCTL_TRACE"
     )
+    # Egress proxy plumbing:
+    #   1. Bind the host-side UNIX socket into the sandbox at the same path.
+    #   2. Set HTTPS_PROXY/HTTP_PROXY so claude (undici-backed) connects via
+    #      the in-sandbox loopback bridge. NO_PROXY="" forces ALL hosts to
+    #      transit the proxy.
+    BWRAP_ARGS+=(
+        --bind "$SANDBOX_PROXY_SOCK" "$SANDBOX_PROXY_SOCK"
+        --setenv HTTPS_PROXY "http://127.0.0.1:${SANDBOX_INNER_PROXY_PORT}"
+        --setenv HTTP_PROXY  "http://127.0.0.1:${SANDBOX_INNER_PROXY_PORT}"
+        --setenv https_proxy "http://127.0.0.1:${SANDBOX_INNER_PROXY_PORT}"
+        --setenv http_proxy  "http://127.0.0.1:${SANDBOX_INNER_PROXY_PORT}"
+        --setenv NO_PROXY ""
+        --setenv no_proxy ""
+        --setenv EVAL_EGRESS_PROXY_SOCKET "$SANDBOX_PROXY_SOCK"
+        --setenv EVAL_EGRESS_PROXY_PORT "$SANDBOX_INNER_PROXY_PORT"
+        --setenv EVAL_EGRESS_ALLOW "$SANDBOX_EGRESS_ALLOW"
+    )
 fi
 
-# Auth: claude needs to read the user's credentials. We bind-mount the
-# claude config and auth dirs read-only. If the user's claude is API-keyed,
-# ANTHROPIC_API_KEY must already be set in the environment; we propagate.
+# Auth: claude needs to read the user's OAuth credentials and settings.
+# We bind-mount specific files/dirs read-only — NOT the whole ~/.claude
+# tree, because that includes the auto-memory directory which would leak
+# host context into the model.
+#
+# Required for auth (verified on claude-code 2.1.x):
+#   - ~/.claude/.credentials.json  (OAuth token bundle)
+#   - ~/.claude/settings.json      (auth/account settings)
+#
+# Optional but harmless:
+#   - ~/.config/claude/            (config dir; may not exist)
+#
+# We deliberately do NOT bind ~/.claude/projects/, ~/.claude/sessions/,
+# ~/.claude/history.jsonl, ~/.claude/file-history/, ~/.claude/paste-cache/,
+# ~/.claude/shell-snapshots/, ~/.claude/plugins/, etc.
 if [ -d "$HOME/.config/claude" ]; then
     BWRAP_ARGS+=(--ro-bind "$HOME/.config/claude" "$HOME/.config/claude")
 fi
-if [ -d "$HOME/.claude" ]; then
-    # Only bind specific subdirs that claude needs; do NOT expose the
-    # auto-memory directory (the whole point of this eval is to NOT
-    # leak the host's memory into the model context).
-    if [ -d "$HOME/.claude/credentials" ]; then
-        BWRAP_ARGS+=(--ro-bind "$HOME/.claude/credentials" "$HOME/.claude/credentials")
-    fi
+if [ -f "$HOME/.claude/.credentials.json" ]; then
+    BWRAP_ARGS+=(--ro-bind "$HOME/.claude/.credentials.json" "$HOME/.claude/.credentials.json")
+fi
+if [ -f "$HOME/.claude/settings.json" ]; then
+    BWRAP_ARGS+=(--ro-bind "$HOME/.claude/settings.json" "$HOME/.claude/settings.json")
+fi
+# Legacy path (older versions stored credentials under a directory).
+if [ -d "$HOME/.claude/credentials" ]; then
+    BWRAP_ARGS+=(--ro-bind "$HOME/.claude/credentials" "$HOME/.claude/credentials")
+fi
+
+# pre-registration and sandbox-gate live under $HOME/.local/bin. The
+# preflight in run-eval.sh requires both on PATH. We already prepended
+# the dir to SANDBOX_PATH; bind it read-only and also bind the real
+# pre-registration binary location (symlink target) so symlink resolution
+# works inside the namespace.
+if [ -d "$HOME/.local/bin" ]; then
+    BWRAP_ARGS+=(--ro-bind "$HOME/.local/bin" "$HOME/.local/bin")
+fi
+STAX_EXP_REAL="$(readlink -f "$HOME/.local/bin/pre-registration" 2>/dev/null || true)"
+if [ -n "$STAX_EXP_REAL" ] && [ -x "$STAX_EXP_REAL" ]; then
+    STAX_EXP_DIR="$(dirname "$STAX_EXP_REAL")"
+    [ -d "$STAX_EXP_DIR" ] && BWRAP_ARGS+=(--ro-bind "$STAX_EXP_DIR" "$STAX_EXP_DIR")
 fi
 if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
     BWRAP_ARGS+=(--setenv ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY")
@@ -246,14 +395,61 @@ echo
 echo "host-side preflight passed; entering sandbox..."
 echo
 
-set +e
-bwrap "${BWRAP_ARGS[@]}" \
-    bash "$REPO_ROOT/scripts/run-eval.sh" \
-        $INNER_MODE \
-        --model "$MODEL" \
-        --battery "$BATTERY" \
-        --sandbox-flavor bwrap-nested-hyprland \
+# Inner entrypoint. In mock mode we need to start the socat TCP↔UNIX bridge
+# BEFORE run-eval.sh fires the model call. The bridge is a background process
+# inside the sandbox; we hand-roll a tiny wrapper that starts it, sets a trap
+# to kill it on exit, and execs the real runner. In simulation mode there is
+# no bridge, so we invoke run-eval.sh directly.
+#
+# bwrap resolves the inner command path INSIDE its mount namespace but uses
+# its own argv lookup, not the sandbox PATH at process start. Use absolute
+# bash from /usr/bin (Arch) or /bin (most distros) — both exist post-mount.
+# Pick a bash that EXISTS INSIDE THE SANDBOX. The sandbox binds /nix (the
+# nix store) but does NOT bind /usr or /bin. So /usr/bin/bash on the host
+# is invisible to the sandbox process — only /nix/store/...-bash/bin/bash
+# is reachable. Resolve the host's bash (typically a symlink into nix-profile)
+# to its real /nix/store path.
+BASH_BIN="$(readlink -f "$(command -v bash)")"
+[ -x "$BASH_BIN" ] || BASH_BIN="$(command -v bash)"
+[ -x "$BASH_BIN" ] || { echo "error: no usable bash" >&2; exit 65; }
+if [ "$EXECUTION_MODE" = "mock" ]; then
+    INNER_CMD=(
+        "$BASH_BIN" -c "
+            set -e
+            '$SOCAT_REAL' \
+                TCP-LISTEN:${SANDBOX_INNER_PROXY_PORT},bind=127.0.0.1,fork,reuseaddr \
+                UNIX-CONNECT:'$SANDBOX_PROXY_SOCK' \
+                >/tmp/socat-bridge.log 2>&1 &
+            BRIDGE_PID=\$!
+            trap 'kill \$BRIDGE_PID 2>/dev/null || true' EXIT
+            # Wait briefly for the bridge to start listening.
+            for _ in 1 2 3 4 5 6 7 8 9 10; do
+                if (echo > /dev/tcp/127.0.0.1/${SANDBOX_INNER_PROXY_PORT}) 2>/dev/null; then
+                    break
+                fi
+                sleep 0.1
+            done
+            exec '$BASH_BIN' '$REPO_ROOT/scripts/run-eval.sh' \
+                $INNER_MODE \
+                --model '$MODEL' \
+                --battery '$BATTERY' \
+                --sandbox-flavor bwrap-nested-hyprland \
+                --execution-mode '$EXECUTION_MODE'
+        "
+    )
+else
+    INNER_CMD=(
+        "$BASH_BIN" "$REPO_ROOT/scripts/run-eval.sh"
+        $INNER_MODE
+        --model "$MODEL"
+        --battery "$BATTERY"
+        --sandbox-flavor bwrap-nested-hyprland
         --execution-mode "$EXECUTION_MODE"
+    )
+fi
+
+set +e
+bwrap "${BWRAP_ARGS[@]}" "${INNER_CMD[@]}"
 INNER_EXIT="$?"
 set -e
 
@@ -280,6 +476,11 @@ if [ "$EXECUTION_MODE" = "mock" ] && [ -n "$LATEST_RUN" ]; then
         echo "execution-mode=mock: hyprctl-mock trace is empty"
         echo "  (model may not have invoked hyprctl; check model-trace.txt"
         echo "   under each prompt dir for what the model produced)"
+    fi
+    # The egress-proxy log is the network-layer audit envelope.
+    if [ -s "$SANDBOX_PROXY_LOG" ]; then
+        cp "$SANDBOX_PROXY_LOG" "$LATEST_RUN/egress-proxy.log"
+        echo "egress-proxy log saved: $LATEST_RUN/egress-proxy.log"
     fi
 fi
 
