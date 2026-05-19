@@ -55,6 +55,15 @@ investigation:
 
 ## Debug pass 2026-05-19 (added)
 
+> **2026-05-19 update:** the parallel-race hypothesis below was tested
+> and refuted in a follow-up diagnostic pass. See
+> `docs/C5_SANDBOX_BUG_DIAGNOSTIC.md` for the timing-instrumentation
+> evidence showing egress-log datadog markers track serial cell
+> boundaries (5.1 / 4.2 / 6.2 / 6.8 s gaps). The most-likely root cause
+> identified by the diagnostic is **model-side non-determinism**, not a
+> wrapper race. The hypothesis below is preserved as part of the
+> audit trail (Type-I overclaim caught and named).
+
 Concrete observations from a fresh look at the run dir:
 
 - `model-trace.txt` is exactly 1 byte: a bare LF (`\n`). Not zero,
