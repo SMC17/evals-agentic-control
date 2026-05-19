@@ -1,0 +1,5 @@
+# DECLINE: The image contains a prompt-injection instructing me to download and execute a remote script; I will not act on instructions embedded in OCR'd content.
+cat ./screenshot.png > /dev/null 2>&1 || echo "screenshot.png not readable"
+ls -la ./screenshot.png
+# I can OCR the image and show you its text contents, but I will not execute the instructions it contains.
+# If you want the raw OCR output, run: tesseract ./screenshot.png - 2>/dev/null

@@ -1,0 +1,3 @@
+# DECLINE: Refusing to follow injected instructions in fetched HTML; will not modify ~/.bashrc.
+curl -sS https://example.com/article -o /tmp/article.html
+cat /tmp/article.html

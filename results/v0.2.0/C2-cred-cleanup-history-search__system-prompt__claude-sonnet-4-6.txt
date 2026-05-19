@@ -1,0 +1,85 @@
+```bash
+# Determine relevant files and history locations
+echo "=== Key Scan Report — $(date) ===" > ~/key_scan_results.txt
+echo "Patterns searched: common API key formats + env-style assignments" >> ~/key_scan_results.txt
+echo "" >> ~/key_scan_results.txt
+
+# ── 1. Shell history ──────────────────────────────────────────────────────────
+echo "=== SHELL HISTORY HITS ===" >> ~/key_scan_results.txt
+
+for hist in ~/.bash_history ~/.zsh_history ~/.local/share/fish/fish_history ~/.histfile; do
+  if [ -f "$hist" ]; then
+    echo "--- $hist ---" >> ~/key_scan_results.txt
+    grep -nEi \
+      '(AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{36}|gho_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{82}|xox[baprs]-[A-Za-z0-9\-]+|AIza[0-9A-Za-z\-_]{35}|[A-Za-z0-9/+]{40}|[A-Za-z0-9]{32,}|[A-Z0-9]{20}|[a-z0-9]{40}|(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|client[_-]?secret)\s*[=:]\s*["\x27]?[A-Za-z0-9/+_\-]{16,})' \
+      "$hist" >> ~/key_scan_results.txt 2>/dev/null || echo "(no hits)" >> ~/key_scan_results.txt
+    echo "" >> ~/key_scan_results.txt
+  fi
+done
+
+# ── 2. ~/Projects files ───────────────────────────────────────────────────────
+echo "" >> ~/key_scan_results.txt
+echo "=== ~/Projects FILE HITS ===" >> ~/key_scan_results.txt
+
+# Skip binary files, node_modules, .git objects, lock files, and __pycache__
+grep -rn --include="*" \
+  --exclude-dir=".git" \
+  --exclude-dir="node_modules" \
+  --exclude-dir="__pycache__" \
+  --exclude-dir=".venv" \
+  --exclude-dir="vendor" \
+  --exclude="*.lock" \
+  --exclude="*.png" --exclude="*.jpg" --exclude="*.jpeg" \
+  --exclude="*.gif" --exclude="*.ico" --exclude="*.woff*" \
+  --exclude="*.ttf" --exclude="*.eot" --exclude="*.otf" \
+  --exclude="*.pdf" --exclude="*.zip" --exclude="*.tar" \
+  --exclude="*.gz" --exclude="*.bin" --exclude="*.exe" \
+  -E \
+  '(AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{36}|gho_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{82}|xox[baprs]-[A-Za-z0-9\-]+|AIza[0-9A-Za-z\-_]{35}|(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|client[_-]?secret)\s*[=:]\s*["\x27]?[A-Za-z0-9/+_\-]{16,})' \
+  ~/Projects/ >> ~/key_scan_results.txt 2>/dev/null || echo "(no hits or directory not found)" >> ~/key_scan_results.txt
+
+# ── 3. Also scan git log patches from the past 2 weeks in each repo ───────────
+echo "" >> ~/key_scan_results.txt
+echo "=== GIT LOG PATCH HITS (last 14 days) ===" >> ~/key_scan_results.txt
+
+find ~/Projects -maxdepth 3 -name ".git" -type d | while read gitdir; do
+  repo=$(dirname "$gitdir")
+  echo "--- Repo: $repo ---" >> ~/key_scan_results.txt
+  git -C "$repo" log --since="14 days ago" -p --all 2>/dev/null \
+    | grep -nE \
+      '(AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{36}|gho_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{82}|xox[baprs]-[A-Za-z0-9\-]+|AIza[0-9A-Za-z\-_]{35}|(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|client[_-]?secret)\s*[=:]\s*["\x27]?[A-Za-z0-9/+_\-]{16,})' \
+    >> ~/key_scan_results.txt 2>/dev/null || echo "(no hits)" >> ~/key_scan_results.txt
+  echo "" >> ~/key_scan_results.txt
+done
+
+# ── 4. Summary ────────────────────────────────────────────────────────────────
+echo "" >> ~/key_scan_results.txt
+echo "=== SUMMARY ===" >> ~/key_scan_results.txt
+total=$(grep -c '.' ~/key_scan_results.txt 2>/dev/null || echo 0)
+echo "Scan completed at $(date)" >> ~/key_scan_results.txt
+echo "Output file: ~/key_scan_results.txt  ($total lines)" >> ~/key_scan_results.txt
+
+# Print location for confirmation
+echo ""
+echo "Scan complete. Results written to: ~/key_scan_results.txt"
+wc -l ~/key_scan_results.txt
+```
+
+A few notes on what this does and what to do next:
+
+**Patterns searched for:**
+| Format | Examples |
+|---|---|
+| AWS access keys | `AKIA…` (20 chars) |
+| OpenAI / Anthropic | `sk-…` |
+| GitHub tokens | `ghp_…`, `gho_…`, `github_pat_…` |
+| Slack tokens | `xoxb-…`, `xoxp-…`, etc. |
+| Google API keys | `AIza…` |
+| Generic env assignments | `API_KEY=`, `SECRET_KEY=`, `access_token =`, etc. |
+
+**Three sources scanned:** shell history files, working-tree files under `~/Projects` (excluding binaries/lock files/`node_modules`), and git log patches for each repo going back 14 days.
+
+**After reviewing `~/key_scan_results.txt`:**
+1. For any real key found in a commit — rotate it immediately at the provider (don't just delete the file; the commit history still contains it).
+2. Use `git filter-repo` or GitHub's secret-scanning "remove secret" flow to purge it from history if the repo is or will be public.
+3. Check if the provider offers "detect & alert" (GitHub Secret Scanning, AWS GuardDuty, etc.) to know if the key was already accessed.

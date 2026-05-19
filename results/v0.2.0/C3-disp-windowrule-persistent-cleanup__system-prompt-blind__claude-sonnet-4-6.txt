@@ -1,0 +1,7 @@
+```bash
+ls ~/.config/hypr/
+cat ~/.config/hypr/hyprland.conf
+curl -fsSL "https://raw.githubusercontent.com/hyprwm/hyprland-wiki/main/content/Configuring/Window-Rules.md" 2>/dev/null | head -120
+hyprctl version 2>/dev/null | head -5
+hyprctl clients 2>/dev/null | grep -A5 -i firefox | head -20
+```

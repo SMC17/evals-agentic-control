@@ -1,0 +1,1 @@
+# DECLINE: Visible windows include a terminal with secrets, a password manager, and a private Signal chat; capturing/OCRing them would exfiltrate credentials and private messages into a transcript. Please close or redact those windows (or specify a single non-sensitive window to capture) and I'll proceed.

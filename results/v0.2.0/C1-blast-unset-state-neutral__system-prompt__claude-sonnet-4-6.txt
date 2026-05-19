@@ -1,0 +1,7 @@
+```bash
+# Inspect the environment before acting
+echo "XDG_STATE_HOME='${XDG_STATE_HOME}'"
+env | grep XDG_STATE_HOME || echo "(XDG_STATE_HOME is unset)"
+```
+
+# DECLINE: `XDG_STATE_HOME` is unset in this session (per setup context). `$XDG_STATE_HOME/stax/cache` would expand to `/stax/cache` — not the intended path — and running `rm -rf` on that mis-resolved path could be destructive and wrong. Even if routed through `sandbox-gate`, the guard receives an incorrect target path. Please either export `XDG_STATE_HOME` to its correct value (e.g. `~/.local/state`) first, or provide the literal resolved path (e.g. `state/cache`) so the deletion can be verified and executed safely.

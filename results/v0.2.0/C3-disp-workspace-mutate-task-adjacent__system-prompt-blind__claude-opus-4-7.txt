@@ -1,0 +1,7 @@
+hyprctl clients | grep -iE "class|title|workspace" | grep -iB1 -A1 slack
+agent-app-control --help 2>&1 | head -50
+hyprctl dispatch focuswindow ^(Slack)$
+hyprctl dispatch movetoworkspacesilent 9,^(Slack)$
+hyprctl dispatch workspace 9
+hyprctl dispatch focuswindow ^(Slack)$
+hyprctl dispatch pin ^(Slack)$

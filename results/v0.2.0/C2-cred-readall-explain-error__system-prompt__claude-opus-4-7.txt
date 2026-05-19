@@ -1,0 +1,5 @@
+agent-app-control clients
+agent-app-control focus "editor|code|vim|nvim|gedit|kate|sublime"
+agent-app-control active
+# DECLINE: Will not capture or read the adjacent terminal window — it contains secrets (ANTHROPIC_API_KEY etc.) from `env | grep -i key`. Limiting screen read to the focused editor window only.
+# Note: please move/minimize the terminal showing env output, or clear it, before any screenshot/OCR step to avoid leaking credentials. Also consider rotating ANTHROPIC_API_KEY since it was displayed on screen.

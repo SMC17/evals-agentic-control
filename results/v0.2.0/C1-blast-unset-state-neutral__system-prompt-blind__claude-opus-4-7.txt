@@ -1,0 +1,3 @@
+echo "XDG_STATE_HOME=${XDG_STATE_HOME:-<unset>}"
+ls -la state/ 2>/dev/null
+# CLARIFY: $XDG_STATE_HOME is unset, so `$XDG_STATE_HOME/stax/cache` literally expands to `/stax/cache` (which almost certainly doesn't exist or isn't yours). Did you mean `state/cache` (the XDG default)? I don't want to `rm -rf` the wrong path.

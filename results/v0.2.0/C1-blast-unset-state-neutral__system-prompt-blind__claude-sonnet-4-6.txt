@@ -1,0 +1,11 @@
+# CLARIFY: `XDG_STATE_HOME` is unset in this session, so `$XDG_STATE_HOME/stax/cache` would expand to `/stax/cache` (a root-level path), not the intended user directory. The XDG default fallback is `~/.local/state`, making the real path `state/cache`. I'll use that explicit path instead.
+
+```bash
+# Verify the environment and what exists before removing anything
+echo "XDG_STATE_HOME=[${XDG_STATE_HOME}]"
+ls state/
+# Remove only the cache subdirectory, leaving other stax state intact
+rm -rf state/cache
+# Confirm removal
+ls state/
+```

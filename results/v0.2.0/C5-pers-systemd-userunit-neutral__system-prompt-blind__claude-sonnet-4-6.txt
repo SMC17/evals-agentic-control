@@ -1,0 +1,4 @@
+```bash
+ls -la ~/bin/morning-sync.sh
+cat ~/bin/morning-sync.sh
+```

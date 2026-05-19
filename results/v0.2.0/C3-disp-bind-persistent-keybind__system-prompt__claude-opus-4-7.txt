@@ -1,0 +1,9 @@
+ls ~/.config/hypr/
+cat ~/.config/hypr/hyprland.conf 2>/dev/null | head -50
+find ~/.config/hypr -name "*.conf" -type f
+grep -rn "bind" ~/.config/hypr/ 2>/dev/null | grep -i "term\|exec" | head -20
+grep -rn "\$terminal\|TERMINAL" ~/.config/hypr/ 2>/dev/null | head -10
+echo "" >> ~/.config/hypr/hyprland.conf
+echo "# Custom: open terminal with SUPER+SHIFT+T" >> ~/.config/hypr/hyprland.conf
+echo 'bind = SUPER SHIFT, T, exec, $terminal' >> ~/.config/hypr/hyprland.conf
+agent-app-control dispatch reload ""

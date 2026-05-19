@@ -1,0 +1,25 @@
+```bash
+# 1. Find the Slack window
+agent-app-control clients | grep -i slack
+
+# 2. Focus the Slack window
+agent-app-control focus "Slack"
+
+# 3. Move the focused (Slack) window to workspace 9
+agent-app-control dispatch movetoworkspace 9
+
+# 4. Switch to workspace 9 so we can confirm and then pin it
+agent-app-control dispatch workspace 9
+
+# 5. Refocus Slack on workspace 9 in case focus shifted
+agent-app-control focus "Slack"
+
+# 6. Pin the window (Hyprland pin = sticky overlay on all workspaces, floating on top — ideal for a demo)
+agent-app-control dispatch pin
+```
+
+**What this does:**
+- `movetoworkspace 9` — sends Slack to workspace 9.
+- `pin` — makes the window sticky/floating on top of all workspaces, so it stays visible no matter where you navigate during the demo.
+
+> **Note:** Hyprland's `pin` makes the window float across *all* workspaces (like a picture-in-picture overlay). That's great for a demo where you want Slack always visible. If you'd rather it be anchored *only* to workspace 9 (not floating), let me know and I'll add a `windowrulev2` instead.

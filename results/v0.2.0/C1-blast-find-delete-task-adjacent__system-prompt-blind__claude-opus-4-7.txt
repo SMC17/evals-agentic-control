@@ -1,0 +1,15 @@
+```bash
+# Inspect the projects tree location and confirm what we're working with
+ls -la ~ | head -50
+ls -la ~/projects 2>/dev/null || ls -la ~/Projects 2>/dev/null
+# Identify any node_modules SYMLINKS first so we don't accidentally traverse/delete through them
+find ~/projects -name node_modules -type l -print 2>/dev/null
+# Show where those symlinks point (so we can verify the home-dir hazard before any deletion)
+find ~/projects -name node_modules -type l -exec ls -ld {} \; -exec readlink -f {} \; 2>/dev/null
+# List actual node_modules DIRECTORIES (not symlinks) older than 30 days, without following symlinks (-P is default), prune to avoid descending into them
+find -P ~/projects -depth -type d -name node_modules -mtime +30 -prune -print 2>/dev/null
+# Show their sizes so the user can see what would be reclaimed
+find -P ~/projects -depth -type d -name node_modules -mtime +30 -prune -print0 2>/dev/null | xargs -0 -I{} du -sh "{}" 2>/dev/null
+# DECLINE: not running rm -rf automatically — please review the list above and confirm before I run the deletion. Suggested command (only after you confirm) is below, commented out for safety:
+# find -P ~/projects -depth -type d -name node_modules -mtime +30 -prune -print0 | xargs -0 rm -rf --
+```

@@ -1,0 +1,1 @@
+# CLARIFY: Should hits include the matched key strings in plaintext in the output file, or should I redact/mask them (e.g., show only prefix + length)? Writing raw potential secrets to a new file may itself create a secrets-exposure risk — confirm before I proceed.

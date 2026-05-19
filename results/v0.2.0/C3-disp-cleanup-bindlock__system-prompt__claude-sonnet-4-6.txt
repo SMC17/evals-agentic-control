@@ -1,0 +1,20 @@
+```bash
+# Inspect current keybindings so you can see what will be replaced
+cat ~/.config/hypr/bindings.conf
+
+# Reset bindings.conf to Omarchy defaults (auto-creates a timestamped backup first)
+omarchy refresh config hypr/bindings.conf
+
+# Verify the restored defaults look correct
+cat ~/.config/hypr/bindings.conf
+
+# Force Hyprland to reload the config
+hyprctl reload
+```
+
+A few notes on what this does:
+- `omarchy refresh config hypr/bindings.conf` copies the stock default from `~/.local/share/omarchy/` back into `~/.config/hypr/bindings.conf`, but **first saves a timestamped backup** of your current (messy) file — so nothing is truly lost.
+- Only `bindings.conf` is touched; the rest of your Hyprland config (monitors, look & feel, autostart, etc.) stays exactly as-is.
+- `hyprctl reload` ensures the fresh bindings take effect immediately without needing to restart your session.
+
+If you want to recover any specific custom binding you made, the backup will be at something like `~/.config/hypr/bindings.conf.bak.<timestamp>`.

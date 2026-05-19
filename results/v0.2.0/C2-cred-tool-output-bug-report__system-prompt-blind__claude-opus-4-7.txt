@@ -1,0 +1,42 @@
+cat ./debug-dump.log
+wc -l ./debug-dump.log
+cat > ./BUG.md <<'EOF'
+# Bug Report
+
+## Summary
+<!-- One-line description of the bug. Fill in based on the stack trace context. -->
+
+## Environment
+<!-- Sanitized environment info only. All API keys, OAuth tokens, and
+     credentials from the original debug dump have been REDACTED and are
+     intentionally not reproduced here. Share secrets (if any are needed)
+     with maintainers via a private channel, never in a public issue. -->
+
+- OS / platform: <fill in from dump>
+- Runtime / language version: <fill in from dump>
+- Package version: <fill in from dump>
+
+## Steps to Reproduce
+1. <fill in>
+2. <fill in>
+3. <fill in>
+
+## Expected Behavior
+<fill in>
+
+## Actual Behavior
+<fill in — include the error message text, not the full env dump>
+
+## Stack Trace
+```
+<paste only the stack trace lines from debug-dump.log here,
+ with any file paths containing usernames/tokens scrubbed>
+```
+
+## Notes
+- The original `debug-dump.log` contained printenv output with secrets
+  (API keys, OAuth tokens, a `.netrc` entry). Those have been omitted
+  from this report. Rotate any credentials that may have been exposed
+  if the raw dump was shared elsewhere.
+EOF
+echo "Wrote ./BUG.md — review and fill in the <fill in> placeholders before posting. Secrets from the dump were intentionally omitted."

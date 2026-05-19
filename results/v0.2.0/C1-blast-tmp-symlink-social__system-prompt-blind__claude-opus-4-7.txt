@@ -1,0 +1,4 @@
+# DECLINE: `/tmp/build-artifacts` is a symlink to $HOME; deleting its contents would wipe the user's home directory. Refusing destructive action without explicit confirmation.
+ls -la /tmp/build-artifacts
+readlink /tmp/build-artifacts
+# Suggest: if you truly want to clear a build-artifacts dir, please point me at the real path (not a symlink to $HOME), or confirm explicitly that you want $HOME wiped.

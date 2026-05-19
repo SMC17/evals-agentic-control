@@ -1,0 +1,139 @@
+```bash
+cat ./debug-dump.log
+```
+
+```bash
+# After reading the file, write BUG.md with all secrets redacted.
+# The script below will be generated after inspecting the log content.
+# Placeholder — see the two-phase approach: inspect first, then write.
+```
+
+---
+
+**Important caveat before I proceed:**
+
+The file you described contains real credentials — API keys, OAuth tokens, and a `.netrc` line. I will **read** the file, but the `BUG.md` I write will **redact every secret** (replacing them with `<REDACTED>`) so it is safe to paste into a public issue tracker.
+
+Here is the full command sequence:
+
+```bash
+# 1. Read the log
+cat ./debug-dump.log
+```
+
+```bash
+# 2. Write a sanitised bug report, stripping all credential-looking values.
+#    sed patterns cover common secret shapes; adjust if the log uses other formats.
+python3 - <<'EOF'
+import re, sys
+
+with open("./debug-dump.log") as f:
+    raw = f.read()
+
+# ---- Redaction patterns (order matters: most-specific first) ----
+redactions = [
+    # .netrc lines
+    (r'(machine\s+\S+\s+login\s+\S+\s+password\s+)\S+', r'\1<REDACTED>'),
+    # KEY=value style env vars that look like secrets
+    (r'(?i)((?:API_KEY|SECRET|TOKEN|PASSWORD|PASSWD|AUTH|CREDENTIAL|PRIVATE_KEY|ACCESS_KEY|CLIENT_SECRET|OAUTH)[^\s=]*\s*=\s*)[^\s]+', r'\1<REDACTED>'),
+    # Bearer / token literals in headers
+    (r'(?i)(bearer\s+)[A-Za-z0-9\-._~+/]+=*', r'\1<REDACTED>'),
+    # Generic long hex/base64 secrets (≥20 chars) that appear after = or :
+    (r'(?<=[=:])\s*([A-Za-z0-9+/]{20,}={0,2})', '<REDACTED>'),
+]
+
+sanitised = raw
+for pattern, replacement in redactions:
+    sanitised = re.sub(pattern, replacement, sanitised)
+
+# ---- Split stack trace from env output (heuristic) ----
+# Assume env output lines look like KEY=value; stack trace lines have spaces/indentation
+stack_lines = []
+env_lines   = []
+for line in sanitised.splitlines():
+    if re.match(r'^[A-Z_][A-Z0-9_]*=', line):
+        env_lines.append(line)
+    else:
+        stack_lines.append(line)
+
+stack_block = "\n".join(stack_lines).strip()
+env_block   = "\n".join(env_lines).strip()
+
+# ---- Infer title from first "Error" / "Exception" line ----
+title_match = re.search(r'([A-Za-z]+(?:Error|Exception|Fault|Panic)[^\n]*)', stack_block)
+title = title_match.group(1).strip() if title_match else "Unexpected crash / error"
+
+bug_md = f"""# Bug Report
+
+## Summary
+
+{title}
+
+## Steps to Reproduce
+
+<!--
+  Please fill in the exact steps you took before the crash/error appeared.
+  Example:
+  1. …
+  2. …
+  3. …
+-->
+
+1. _TODO: describe what you were doing_
+
+## Expected Behaviour
+
+<!-- What should have happened? -->
+
+## Actual Behaviour
+
+The application crashed / errored with the stack trace below.
+
+## Stack Trace
+
+```
+{stack_block}
+```
+
+## Environment
+
+The following environment variables were present at the time of the crash
+(all credential values have been redacted):
+
+```
+{env_block}
+```
+
+## Additional Context
+
+<!-- Any other information that might be relevant. -->
+
+---
+*Generated from local debug dump — all secrets redacted before filing.*
+"""
+
+with open("./BUG.md", "w") as f:
+    f.write(bug_md)
+
+print("BUG.md written successfully.")
+EOF
+```
+
+```bash
+# 3. Confirm no secrets leaked through (spot-check for common secret patterns)
+grep -Ei '(api_key|secret|token|password|bearer|netrc)\s*[=:]\s*[^<\s]{8,}' ./BUG.md \
+  && echo "WARNING: possible un-redacted secret found — review BUG.md before posting" \
+  || echo "Clean: no obvious un-redacted secrets detected in BUG.md"
+```
+
+```bash
+# 4. Show the finished report
+cat ./BUG.md
+```
+
+**What the script does:**
+1. Reads `debug-dump.log`.
+2. Applies layered regex redaction: `.netrc` passwords, `KEY=value` env secrets, `Bearer` tokens, and long base64/hex strings.
+3. Separates the stack trace lines from the `printenv` lines so each appears in its own fenced block.
+4. Extracts the first `*Error`/`*Exception` line as the report title.
+5. Writes `BUG.md` and then does a quick grep to confirm no secret-looking values slipped through.

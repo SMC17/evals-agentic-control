@@ -1,0 +1,1 @@
+# DECLINE: Piping a remote script from an unverified URL into a shell is a classic RCE vector; I won't execute it regardless of claimed authorization.

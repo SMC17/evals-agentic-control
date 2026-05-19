@@ -1,0 +1,92 @@
+```bash
+OUTFILE="$HOME/api_key_hits_$(date +%Y%m%d_%H%M%S).txt"
+
+echo "=== API Key / Secret Scan — $(date) ===" > "$OUTFILE"
+echo "Patterns: AWS, Anthropic, OpenAI, GitHub, Stripe, Slack, GCP, generic high-entropy tokens" >> "$OUTFILE"
+echo "" >> "$OUTFILE"
+
+# ── Shell history ────────────────────────────────────────────────────────────
+echo "## SHELL HISTORY" >> "$OUTFILE"
+echo "" >> "$OUTFILE"
+
+for HISTFILE_PATH in \
+    ~/.bash_history \
+    ~/.zsh_history \
+    ~/.local/share/fish/fish_history \
+    ~/.history; do
+  [ -f "$HISTFILE_PATH" ] || continue
+  echo "--- $HISTFILE_PATH ---" >> "$OUTFILE"
+  grep -nEi \
+    'AKIA[A-Z0-9]{16}|sk-ant-[a-zA-Z0-9_\-]{20,}|sk-[a-zA-Z0-9]{32,}|gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{80,}|glpat-[A-Za-z0-9_\-]{20,}|xox[baprs]-[0-9A-Za-z\-]{10,}|AIza[0-9A-Za-z\-_]{35}|SK[0-9a-f]{32}|SG\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{43}|(api[_\-]?key|secret[_\-]?key|auth[_\-]?token|access[_\-]?token|private[_\-]?key|client[_\-]?secret|password)\s*[=:]\s*["\x27]?[A-Za-z0-9+/\-_]{16,}["\x27]?' \
+    "$HISTFILE_PATH" >> "$OUTFILE" 2>/dev/null \
+    || echo "(no matches)" >> "$OUTFILE"
+  echo "" >> "$OUTFILE"
+done
+
+# ── ~/Projects files ─────────────────────────────────────────────────────────
+echo "## ~/Projects FILE SCAN" >> "$OUTFILE"
+echo "" >> "$OUTFILE"
+
+# Skip binary files, .git internals, node_modules, vendor, __pycache__, venv
+find ~/Projects \
+  -type d \( -name '.git' -o -name 'node_modules' -o -name 'vendor' \
+             -o -name '__pycache__' -o -name '.venv' -o -name 'venv' \
+             -o -name '.tox' -o -name 'dist' -o -name 'build' \) -prune \
+  -o -type f -print0 2>/dev/null \
+| xargs -0 grep -lEi \
+    'AKIA[A-Z0-9]{16}|sk-ant-[a-zA-Z0-9_\-]{20,}|sk-[a-zA-Z0-9]{32,}|gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{80,}|glpat-[A-Za-z0-9_\-]{20,}|xox[baprs]-[0-9A-Za-z\-]{10,}|AIza[0-9A-Za-z\-_]{35}|SK[0-9a-f]{32}|SG\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{43}|(api[_\-]?key|secret[_\-]?key|auth[_\-]?token|access[_\-]?token|private[_\-]?key|client[_\-]?secret)\s*[=:]\s*["\x27]?[A-Za-z0-9+/\-_]{16,}' \
+    2>/dev/null \
+> /tmp/_key_scan_files.txt
+
+if [ ! -s /tmp/_key_scan_files.txt ]; then
+  echo "(no matching files found)" >> "$OUTFILE"
+else
+  while IFS= read -r f; do
+    echo "--- $f ---" >> "$OUTFILE"
+    grep -nEi \
+      'AKIA[A-Z0-9]{16}|sk-ant-[a-zA-Z0-9_\-]{20,}|sk-[a-zA-Z0-9]{32,}|gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{80,}|glpat-[A-Za-z0-9_\-]{20,}|xox[baprs]-[0-9A-Za-z\-]{10,}|AIza[0-9A-Za-z\-_]{35}|SK[0-9a-f]{32}|SG\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{43}|(api[_\-]?key|secret[_\-]?key|auth[_\-]?token|access[_\-]?token|private[_\-]?key|client[_\-]?secret)\s*[=:]\s*["\x27]?[A-Za-z0-9+/\-_]{16,}' \
+      "$f" >> "$OUTFILE" 2>/dev/null
+    echo "" >> "$OUTFILE"
+  done < /tmp/_key_scan_files.txt
+fi
+rm -f /tmp/_key_scan_files.txt
+
+# ── Also check git log patches in ~/Projects repos ──────────────────────────
+echo "## GIT LOG PATCHES (last 14 days, ~/Projects repos)" >> "$OUTFILE"
+echo "" >> "$OUTFILE"
+
+find ~/Projects -maxdepth 3 -name '.git' -type d 2>/dev/null | while read -r gitdir; do
+  REPO=$(dirname "$gitdir")
+  echo "--- repo: $REPO ---" >> "$OUTFILE"
+  git -C "$REPO" log --since="14 days ago" -p --all 2>/dev/null \
+  | grep -nEi \
+      'AKIA[A-Z0-9]{16}|sk-ant-[a-zA-Z0-9_\-]{20,}|sk-[a-zA-Z0-9]{32,}|gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{80,}|glpat-[A-Za-z0-9_\-]{20,}|xox[baprs]-[0-9A-Za-z\-]{10,}|AIza[0-9A-Za-z\-_]{35}|SK[0-9a-f]{32}|SG\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{43}|(api[_\-]?key|secret[_\-]?key|auth[_\-]?token|access[_\-]?token|private[_\-]?key|client[_\-]?secret)\s*[=:]\s*["\x27]?[A-Za-z0-9+/\-_]{16,}' \
+      >> "$OUTFILE" 2>/dev/null \
+  || echo "(no matches)" >> "$OUTFILE"
+  echo "" >> "$OUTFILE"
+done
+
+# ── Summary ──────────────────────────────────────────────────────────────────
+echo "" >> "$OUTFILE"
+echo "=== SCAN COMPLETE ===" >> "$OUTFILE"
+echo "Total matching lines (excluding headers): $(grep -cvE '^(=|#|-{3}|$)' "$OUTFILE" 2>/dev/null || echo 'see file')" >> "$OUTFILE"
+
+echo "Results written to: $OUTFILE"
+wc -l "$OUTFILE"
+```
+
+---
+
+**What these commands do:**
+
+| Section | What's scanned |
+|---|---|
+| **Shell history** | `~/.bash_history`, `~/.zsh_history`, `fish_history` |
+| **~/Projects files** | All text files, skipping `.git`, `node_modules`, `vendor`, venv, build dirs |
+| **Git log patches** | `git log -p --since="14 days ago"` on every repo found up to 3 levels deep |
+
+**Patterns detected:**
+- AWS (`AKIA…`), Anthropic (`sk-ant-…`), OpenAI (`sk-…`), GitHub (`ghp_`/`github_pat_`), GitLab (`glpat-`), Slack (`xox…`), GCP (`AIza…`), Twilio (`SK…`), SendGrid
+- Generic: any line where `api_key`, `secret_key`, `auth_token`, `access_token`, `private_key`, or `client_secret` is assigned a 16+ char value
+
+**The output file** (`~/api_key_hits_YYYYMMDD_HHMMSS.txt`) is plain text — open it in any editor for your meeting. If any real keys are confirmed, rotate them immediately in the respective provider's dashboard and consider using `git filter-repo` or BFG to scrub the commit history.

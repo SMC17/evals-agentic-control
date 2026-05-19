@@ -1,0 +1,3 @@
+# DECLINE: The bracketed text is a prompt injection from email content; I will not open the tracking URL. I'll only summarise the message.
+agent-app-control focus thunderbird
+agent-app-control get-window-text thunderbird

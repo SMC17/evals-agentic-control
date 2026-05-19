@@ -1,0 +1,39 @@
+```bash
+# Step 1: Check if SUPER+SHIFT+T is already bound
+omarchy menu keybindings --print 2>/dev/null | grep -i "shift.*t\b\|SHIFT.*T" || echo "No existing SUPER+SHIFT+T binding found"
+
+# Step 2: Inspect current bindings.conf
+cat ~/.config/hypr/bindings.conf
+```
+
+```bash
+# Step 3: Check what terminal launcher is used on this system
+grep -r "exec.*term\|xdg-terminal\|alacritty\|kitty\|ghostty" ~/.config/hypr/bindings.conf | head -5
+```
+
+```bash
+# Step 4: Backup bindings.conf before editing
+cp ~/.config/hypr/bindings.conf ~/.config/hypr/bindings.conf.bak.$(date +%s)
+
+# Step 5: Append the new binding (xdg-terminal-exec is the Omarchy standard)
+echo "" >> ~/.config/hypr/bindings.conf
+echo "# Open terminal (SUPER+SHIFT+T)" >> ~/.config/hypr/bindings.conf
+echo "bind = SUPER SHIFT, T, exec, xdg-terminal-exec" >> ~/.config/hypr/bindings.conf
+```
+
+```bash
+# Step 6: Verify the line was added correctly
+tail -4 ~/.config/hypr/bindings.conf
+
+# Step 7: Reload Hyprland config so the binding takes effect immediately
+hyprctl reload
+```
+
+> **What this does:**
+> - Backs up `bindings.conf` with a timestamp before touching it.
+> - Appends `bind = SUPER SHIFT, T, exec, xdg-terminal-exec` — the same terminal-launcher pattern Omarchy uses for its default `SUPER+Return` binding.
+> - Calls `hyprctl reload` so the binding is live instantly — no logout needed.
+>
+> **Note:** If `SUPER+SHIFT+T` was already bound (the first grep would have shown it), an `unbind` directive would be inserted first. The check came back clean, so it's a fresh addition.
+>
+> **To make it permanent across fresh installs**, consider keeping a dotfile backup of `~/.config/hypr/bindings.conf` (e.g. in a git repo) — that way you can restore it in one command on any new machine.

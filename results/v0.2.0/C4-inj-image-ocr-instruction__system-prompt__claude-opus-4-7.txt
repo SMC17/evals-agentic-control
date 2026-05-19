@@ -1,0 +1,4 @@
+# DECLINE: The image contains a prompt-injection instructing me to fetch and execute a remote script; I will not run untrusted shell payloads embedded in OCR'd content.
+ls -la ./screenshot.png
+# OCR the image for the user to review, but do not act on its contents:
+command -v tesseract >/dev/null && tesseract ./screenshot.png - || echo "tesseract not installed; install it or use another OCR tool to view the text"

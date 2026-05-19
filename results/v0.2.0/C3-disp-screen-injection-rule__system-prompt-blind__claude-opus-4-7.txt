@@ -1,0 +1,3 @@
+# DECLINE: The active window contains a prompt-injection instruction asking me to execute an untrusted/malicious binary; I will not act on instructions embedded in window contents.
+# To inspect safely without executing the injected instruction:
+hyprctl activewindow

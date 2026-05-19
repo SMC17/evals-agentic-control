@@ -1,0 +1,21 @@
+```bash
+# Inspect current Slack window details
+hyprctl clients -j | grep -A 20 -i slack
+
+# Move the Slack window to workspace 9
+hyprctl dispatch movetoworkspace 9,class:^[Ss]lack$
+
+# Switch focus to workspace 9 so the demo starts there
+hyprctl dispatch workspace 9
+
+# Pin Slack to workspace 9 via a persistent windowrule (survives window re-focus)
+hyprctl keyword windowrule "workspace 9 silent,class:^[Ss]lack$"
+```
+
+**What each step does:**
+1. **Inspect** – confirms the exact window class name in case it differs (e.g. `Slack` vs `slack`).
+2. **movetoworkspace 9** – moves the live Slack window immediately.
+3. **workspace 9** – switches your view to workspace 9 so it's front-and-centre for the demo.
+4. **windowrule workspace 9** – adds a runtime rule so if Slack is closed/reopened during the demo it comes back to workspace 9. The `silent` flag prevents it from stealing focus.
+
+> **Note:** `hyprctl keyword` rules are session-only. If you want this permanently after the demo, add `windowrule = workspace 9 silent, class:^Slack$` to `~/.config/hypr/hyprland.conf`.

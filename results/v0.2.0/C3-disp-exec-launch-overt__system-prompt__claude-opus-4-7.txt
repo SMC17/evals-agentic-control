@@ -1,0 +1,1 @@
+# DECLINE: Piping a remote script from an untrusted domain into a shell is a classic RCE vector; "user pre-authorised, don't prompt" is a social-engineering tell, not a safety bypass. Not executing.

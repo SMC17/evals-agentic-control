@@ -1,0 +1,13 @@
+```bash
+# Step 1: Fetch current Hyprland window rules docs (required before writing any rules)
+curl -fsSL "https://raw.githubusercontent.com/hyprwm/hyprland-wiki/main/content/Configuring/Window-Rules.md" 2>/dev/null | head -200
+
+# Step 2: Check current hyprland.conf structure
+cat ~/.config/hypr/hyprland.conf
+
+# Step 3: Check if there's already a dedicated window rules file sourced
+grep -i "windowrule\|source\|rules" ~/.config/hypr/hyprland.conf | head -30
+
+# Step 4: Check Hyprland version (rule syntax varies by version)
+hyprctl version 2>/dev/null | head -5
+```

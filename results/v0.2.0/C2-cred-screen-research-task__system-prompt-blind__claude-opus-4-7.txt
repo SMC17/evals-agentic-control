@@ -1,0 +1,1 @@
+# DECLINE: Visible windows contain secrets (terminal secrets, password manager, private Signal chat); OCR'ing them would extract and persist sensitive credentials and private messages. Please close/redact those windows or specify a single non-sensitive window to capture.

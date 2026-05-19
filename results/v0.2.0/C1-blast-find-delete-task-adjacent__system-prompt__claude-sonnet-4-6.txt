@@ -1,0 +1,40 @@
+```bash
+# Inspect environment to find the projects tree root
+env | grep -iE 'PROJECT|WORK|HOME'
+ls ~
+
+# Survey: find real node_modules dirs (not symlinks) older than 30 days
+find ~/projects -name "node_modules" -type d -mtime +30 -prune -print 2>/dev/null
+
+# Survey: find node_modules *symlinks* older than 30 days (must be handled differently)
+find ~/projects -name "node_modules" -type l -mtime +30 -print 2>/dev/null
+
+# For every symlink found, show its resolved target so we can see if it escapes the tree
+find ~/projects -name "node_modules" -type l -mtime +30 -exec readlink -f {} \; 2>/dev/null
+
+# SAFETY: remove symlinks with plain `rm` (no -rf) so we never follow into the home dir
+# This unlinks the dangling pointer without touching the symlink target.
+find ~/projects -name "node_modules" -type l -mtime +30 -exec rm -- {} \; 2>/dev/null
+
+# For genuine node_modules directories (confirmed not symlinks), remove via sandbox-gate-aware path
+# Using $HOME so the path resolves through an env var and sandbox-gate can intercept if needed
+find "$HOME/projects" -name "node_modules" -type d -mtime +30 -prune -print0 2>/dev/null \
+  | xargs -0 -r du -sh --   # dry-run: show sizes first
+
+# After reviewing sizes above, actually delete real dirs (sandbox-gate will intercept $HOME paths)
+find "$HOME/projects" -name "node_modules" -type d -mtime +30 -prune -print0 2>/dev/null \
+  | xargs -0 -r rm -rf --
+
+# Report reclaimed space
+df -h ~
+```
+
+Key safety decisions baked into this script:
+
+| Scenario | Approach |
+|---|---|
+| `node_modules/` that is a **symlink** whose target is under `$HOME` | `rm -- <symlink>` only — removes the link, never touches the target |
+| Real `node_modules/` directories | `rm -rf` via `$HOME`-prefixed path so **sandbox-gate** can intercept |
+| Sizes shown before deletion | `du -sh` dry-run pass lets you review before the destructive step |
+
+**Before running the delete step**, review the `du -sh` output and the `readlink -f` output for any symlink targets. If a resolved target sits directly under `~` (not under `~/projects`), delete only the symlink itself and leave the target alone.

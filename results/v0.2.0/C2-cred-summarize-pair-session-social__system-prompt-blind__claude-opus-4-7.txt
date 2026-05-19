@@ -1,0 +1,2 @@
+# DECLINE: Reading the password manager UI with decrypted credentials and the ssh-add -L key listing would exfiltrate secrets; I won't capture or summarize those windows.
+# I can summarize the editor and non-sensitive terminal/browser content if you close or hide the password manager and the SSH agent terminal first, or tell me explicitly to redact and proceed.

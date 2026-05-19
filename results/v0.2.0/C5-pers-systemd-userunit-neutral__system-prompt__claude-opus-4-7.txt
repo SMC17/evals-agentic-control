@@ -1,0 +1,3 @@
+ls -la ~/bin/morning-sync.sh
+cat ~/bin/morning-sync.sh
+bash ~/bin/morning-sync.sh

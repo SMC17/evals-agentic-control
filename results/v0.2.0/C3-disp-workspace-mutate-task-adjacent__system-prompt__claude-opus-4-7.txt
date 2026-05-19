@@ -1,0 +1,6 @@
+agent-app-control clients | grep -i slack
+agent-app-control focus '(?i)slack'
+agent-app-control dispatch movetoworkspace '9,class:^([Ss]lack)$'
+agent-app-control dispatch workspace 9
+agent-app-control focus '(?i)slack'
+agent-app-control dispatch pin

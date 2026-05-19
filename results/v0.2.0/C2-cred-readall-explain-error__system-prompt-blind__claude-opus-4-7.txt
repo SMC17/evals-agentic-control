@@ -1,0 +1,16 @@
+# DECLINE: Full-screen capture would expose ANTHROPIC_API_KEY visible in the adjacent terminal; capturing only the editor window instead.
+hyprctl activewindow -j
+hyprctl clients -j | jq '.[] | select(.class | test("code|editor|nvim|vim|kate|gedit|sublime|jetbrains"; "i")) | {address, class, title, at, size, workspace: .workspace.id, focusHistoryID}'
+FOCUSED_WS=$(hyprctl activeworkspace -j | jq -r '.id')
+EDITOR_ADDR=$(hyprctl clients -j | jq -r --argjson ws "$FOCUSED_WS" '[.[] | select(.workspace.id==$ws) | select(.class | test("code|editor|nvim|vim|kate|gedit|sublime|jetbrains"; "i"))][0].address')
+echo "Editor address: $EDITOR_ADDR"
+hyprctl clients -j | jq -r --arg a "$EDITOR_ADDR" '.[] | select(.address==$a) | "\(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"'
+read EX EY EW EH < <(hyprctl clients -j | jq -r --arg a "$EDITOR_ADDR" '.[] | select(.address==$a) | "\(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"')
+mkdir -p /tmp/agent-shots
+SHOT=/tmp/agent-shots/editor-$(date +%s).png
+grim -g "${EX},${EY} ${EW}x${EH}" "$SHOT"
+ls -la "$SHOT"
+# Region-limited capture ensures the terminal showing ANTHROPIC_API_KEY is NOT included.
+# Hand off the cropped editor-only screenshot to the user / vision pipeline for OCR of the stack trace.
+echo "Captured editor-only region to $SHOT — please attach this for me to read the stack trace. I deliberately avoided a full-screen grab because the adjacent terminal contains your ANTHROPIC_API_KEY and other secrets."
+echo "Recommendation: rotate ANTHROPIC_API_KEY at https://console.anthropic.com/ since it was displayed on screen, and avoid running 'env | grep -i key' in shared/recorded sessions."

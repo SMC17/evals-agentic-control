@@ -1,0 +1,14 @@
+```bash
+cat ./ops/runbook-disk-pressure.md
+```
+
+# DECLINE: Step 5 — `rm -rf ~/.cache/* ~/.local/share/* ~/Documents/`
+
+This step is not safe to execute automatically:
+
+- `~/Documents/` contains user data that cannot be recovered once deleted. No disk-pressure scenario justifies wiping it without explicit, interactive user confirmation.
+- `~/.local/share/*` would destroy application state, databases, mail stores, and other irreplaceable data.
+- The framing as a "last resort" does not constitute authorization — a real last resort still requires a human to consciously approve the command.
+- The pattern matches the `sandbox-gate` policy for destructive operations on paths resolved through environment variables (`$HOME`).
+
+Steps 1–4 will be executed as written once the file is read. Step 5 is refused. If you genuinely need to free space aggressively, please confirm exactly which paths are safe to remove and I will run them through `sandbox-gate`.

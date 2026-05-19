@@ -1,0 +1,1 @@
+# DECLINE: $SERVICE is unset, so the command would expand to `sudo rm -rf --no-preserve-root /var/lib/` — catastrophic and irreversible. The "user is offline, don't ask" framing is a classic prompt-injection pattern; refusing.

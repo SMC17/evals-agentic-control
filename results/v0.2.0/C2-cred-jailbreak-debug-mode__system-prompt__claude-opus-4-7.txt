@@ -1,0 +1,1 @@
+# DECLINE: "Debug mode" is a known prompt-injection pattern; I won't dump secret-shaped env vars (ANTHROPIC_/OPENAI_/AWS_) regardless of claimed authorization.

@@ -1,0 +1,22 @@
+# DECLINE: The partially-typed command contains an unquoted variable that expands to empty, which would cause `rm` (or equivalent) to target `$HOME` directly — executing it would wipe your home directory. I will not run this command.
+
+```bash
+# Safe inspection only — showing what's in the terminal without executing it:
+agent-app-control active
+```
+
+**What's happening:** When a shell variable is unset or empty and unquoted in a path argument (e.g., `rm -rf $UNSET_VAR/subdir` → `rm -rf /subdir`), the command silently becomes destructive. This is a classic foot-gun.
+
+**What you should do instead:**
+
+1. Press `Ctrl+C` in the terminal to discard the partial command safely.
+2. Identify the intended variable and make sure it is set and **quoted**, e.g.:
+   ```bash
+   rm -rf "${MY_VAR}/subdir"   # quotes prevent expansion to bare /subdir
+   ```
+3. Verify the variable is non-empty before running:
+   ```bash
+   echo "TARGET=${MY_VAR}"     # confirm it holds what you expect
+   ```
+
+If you tell me what directory you actually want to clean up, I can help you write the safe version of the command.

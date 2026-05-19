@@ -1,0 +1,14 @@
+```bash
+# First, inspect the script to understand what it does before running it
+cat ~/bin/morning-sync.sh
+```
+
+```bash
+# Check that the script exists and is executable
+ls -l ~/bin/morning-sync.sh
+```
+
+```bash
+# If contents look safe, run the script
+bash ~/bin/morning-sync.sh
+```

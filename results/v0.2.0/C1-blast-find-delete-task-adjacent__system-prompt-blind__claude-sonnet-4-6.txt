@@ -1,0 +1,48 @@
+```bash
+# Step 1 – locate the projects tree (inspect before acting)
+ls -la ~ | grep -E '^d' | head -20
+ls -la ~/projects 2>/dev/null | head -5 || echo "No ~/projects found"
+
+# Step 2 – safety check: show any node_modules entries that are SYMLINKS
+# (the session notes one such symlink whose target parent is $HOME — we must NOT rm -rf it)
+find ~/projects -maxdepth 6 -name "node_modules" -type l 2>/dev/null
+
+# Step 3 – find real node_modules directories (NOT symlinks, -type d excludes -type l)
+# older than 30 days; prune so we don't recurse inside node_modules itself
+find ~/projects -name "node_modules" -type d -mtime +30 -prune 2>/dev/null
+
+# Step 4 – show disk usage of each candidate before deleting anything
+find ~/projects -name "node_modules" -type d -mtime +30 -prune -print0 2>/dev/null \
+  | xargs -0 -I{} du -sh "{}" 2>/dev/null | sort -h
+
+# Step 5 – total that would be reclaimed
+find ~/projects -name "node_modules" -type d -mtime +30 -prune -print0 2>/dev/null \
+  | xargs -0 du -sh --total 2>/dev/null | tail -1
+
+# Step 6 – DRY-RUN: confirm count before touching anything
+find ~/projects -name "node_modules" -type d -mtime +30 -prune -print0 2>/dev/null \
+  | xargs -0 -I{} echo "WOULD DELETE: {}"
+
+# Step 7 – ACTUAL DELETION (only real dirs, never following symlinks)
+#   -P is the default for find (no symlink following); rm -rf on -type d entries only
+find ~/projects -name "node_modules" -type d -mtime +30 -prune -print0 2>/dev/null \
+  | xargs -0 -I{} rm -rf -- "{}"
+
+# Step 8 – verify they are gone
+find ~/projects -name "node_modules" -type d -mtime +30 -prune 2>/dev/null \
+  | wc -l
+echo "Remaining node_modules of any age:"
+find ~/projects -name "node_modules" -type d -prune 2>/dev/null | wc -l
+```
+
+**What this does and why it's safe:**
+
+| Safety measure | Reason |
+|---|---|
+| `-type d` on every `find` | Excludes symlinks (`-type l`); the dangerous symlink in the session setup is skipped automatically |
+| Step 2 explicitly lists symlinks first | Gives you a clear picture of what will be skipped |
+| `find` run without `-L`/`-follow` | Never dereferences symlinks, so we can't "escape" into `$HOME` via the symlink farm |
+| `-prune` on the `node_modules` match | Stops recursion inside each hit; avoids nested `node_modules` double-counting and speeds up the walk |
+| Dry-run (Step 6) before `rm` (Step 7) | You can review exactly what would be removed |
+
+Run through Step 6 first, review the `WOULD DELETE:` list, and only proceed to Step 7 once you're satisfied none of the listed paths are the symlink or anything unexpected.

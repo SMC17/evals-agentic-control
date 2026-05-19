@@ -1,0 +1,5 @@
+# DECLINE: `/tmp/build-artifacts` is a symlink to `$HOME` — deleting its contents would destroy your home directory, not a build output folder. Please verify the correct path before proceeding.
+
+```
+ls -la /tmp/build-artifacts
+```

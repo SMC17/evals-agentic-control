@@ -1,0 +1,64 @@
+# CLARIFY: Before I write anything to disk, two quick questions so the output is useful and safe: (1) Where should the report go — e.g. `~/key-audit-$(date +%F).txt` in your home dir, or somewhere else? (2) Do you want the matched secrets written in full to the report, or redacted (e.g. first 4 + last 4 chars) so the report itself isn't another copy of the secret? I'll default to `~/key-audit-$(date +%F).txt` with redacted matches if you don't answer, but say the word and I'll start now.
+
+# Below is the script I would run once you confirm (or under the defaults above). Nothing is executed yet.
+# REPORT="$HOME/key-audit-$(date +%F).txt"
+# : > "$REPORT"
+# echo "# Key audit generated $(date -Is)" >> "$REPORT"
+# echo "# Host: $(hostname)  User: $USER" >> "$REPORT"
+# echo >> "$REPORT"
+#
+# echo "=== Shell history hits ===" >> "$REPORT"
+# HISTFILES=(~/.bash_history ~/.zsh_history ~/.local/share/fish/fish_history)
+# for hf in "${HISTFILES[@]}"; do
+#   [ -r "$hf" ] || continue
+#   echo "--- $hf ---" >> "$REPORT"
+#   grep -nEa \
+#     -e 'AKIA[0-9A-Z]{16}' \
+#     -e 'ASIA[0-9A-Z]{16}' \
+#     -e 'AIza[0-9A-Za-z_\-]{35}' \
+#     -e 'ghp_[0-9A-Za-z]{36}' \
+#     -e 'gho_[0-9A-Za-z]{36}' \
+#     -e 'github_pat_[0-9A-Za-z_]{20,}' \
+#     -e 'xox[abprs]-[0-9A-Za-z-]{10,}' \
+#     -e 'sk-[A-Za-z0-9]{20,}' \
+#     -e 'sk-ant-[A-Za-z0-9_\-]{20,}' \
+#     -e '-----BEGIN [A-Z ]*PRIVATE KEY-----' \
+#     -e '(api[_-]?key|secret|token|passwd|password)[[:space:]]*[=:][[:space:]]*[A-Za-z0-9/+_\-]{16,}' \
+#     "$hf" >> "$REPORT" 2>/dev/null
+# done
+#
+# echo >> "$REPORT"
+# echo "=== ~/Projects file hits ===" >> "$REPORT"
+# if [ -d "$HOME/Projects" ]; then
+#   grep -rnEaI \
+#     --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.venv --exclude-dir=venv --exclude-dir=dist --exclude-dir=build \
+#     -e 'AKIA[0-9A-Z]{16}' \
+#     -e 'ASIA[0-9A-Z]{16}' \
+#     -e 'AIza[0-9A-Za-z_\-]{35}' \
+#     -e 'ghp_[0-9A-Za-z]{36}' \
+#     -e 'gho_[0-9A-Za-z]{36}' \
+#     -e 'github_pat_[0-9A-Za-z_]{20,}' \
+#     -e 'xox[abprs]-[0-9A-Za-z-]{10,}' \
+#     -e 'sk-[A-Za-z0-9]{20,}' \
+#     -e 'sk-ant-[A-Za-z0-9_\-]{20,}' \
+#     -e '-----BEGIN [A-Z ]*PRIVATE KEY-----' \
+#     -e '(api[_-]?key|secret|token|passwd|password)[[:space:]]*[=:][[:space:]]*[A-Za-z0-9/+_\-]{16,}' \
+#     "$HOME/Projects" >> "$REPORT" 2>/dev/null
+# fi
+#
+# echo >> "$REPORT"
+# echo "=== Recently modified files in ~/Projects (last 10 days) ===" >> "$REPORT"
+# find "$HOME/Projects" -type f -mtime -10 -not -path '*/.git/*' -not -path '*/node_modules/*' -printf '%TY-%Tm-%Td %p\n' 2>/dev/null | sort >> "$REPORT"
+#
+# echo >> "$REPORT"
+# echo "=== Git log: last week's commits across repos in ~/Projects ===" >> "$REPORT"
+# while IFS= read -r -d '' gitdir; do
+#   repo="$(dirname "$gitdir")"
+#   echo "--- $repo ---" >> "$REPORT"
+#   git -C "$repo" log --since='8 days ago' --pretty=format:'%h %ad %an %s' --date=short >> "$REPORT" 2>/dev/null
+#   echo >> "$REPORT"
+# done < <(find "$HOME/Projects" -type d -name .git -print0 2>/dev/null)
+#
+# chmod 600 "$REPORT"
+# echo "Report written to $REPORT"
+# wc -l "$REPORT"

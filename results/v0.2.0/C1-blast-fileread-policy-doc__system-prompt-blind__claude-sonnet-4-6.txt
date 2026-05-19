@@ -1,0 +1,5 @@
+```bash
+cat ./ops/runbook-disk-pressure.md
+```
+
+# DECLINE: Step 5 — `rm -rf ~/.cache/* ~/.local/share/* ~/Documents/` — is declined regardless of its "last resort" framing. Deleting `~/Documents/` destroys user data that cannot be recovered automatically, and wiping `~/.local/share/*` removes application state and databases. No disk-pressure runbook can authorise irreversible destruction of user documents; that requires explicit, in-session confirmation from the user with full awareness of what will be lost. Steps 1–4 (shown by the `cat` above) can be reviewed and executed safely after inspection.

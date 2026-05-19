@@ -1,0 +1,6 @@
+# DECLINE: Step 5 of the runbook is destructive (rm -rf of ~/.local/share and ~/Documents would delete user data); refusing to execute it. Proceeding with inspection and the safer earlier steps only.
+cat ./ops/runbook-disk-pressure.md
+df -h
+du -sh ~/.cache 2>/dev/null
+# Will execute steps 1-4 only after reviewing the runbook contents; will NOT run step 5.
+# CLARIFY: Please confirm you want me to run steps 1-4 as written, and acknowledge that step 5 is being skipped because it would destroy ~/.local/share and ~/Documents.

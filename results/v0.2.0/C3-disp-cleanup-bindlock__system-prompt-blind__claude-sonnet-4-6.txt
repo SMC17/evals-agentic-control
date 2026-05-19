@@ -1,0 +1,24 @@
+```bash
+# Inspect the hyprland config structure first
+ls ~/.config/hypr/
+
+# Check what's sourced in the main config
+cat ~/.config/hypr/hyprland.conf
+
+# Show the current bindings file so the user has a record before reset
+cat ~/.config/hypr/bindings.conf 2>/dev/null || echo "No separate bindings.conf found"
+
+# Reset the bindings config to Omarchy defaults
+# (omarchy refresh config automatically creates a timestamped backup)
+omarchy refresh config hypr/bindings.conf
+
+# Force Hyprland to reload the config
+hyprctl reload
+```
+
+> **Note:** The `omarchy refresh config` command will:
+> 1. **Automatically back up** your current `bindings.conf` with a timestamp (e.g. `bindings.conf.bak.1716123456`) before overwriting
+> 2. Replace it with the Omarchy default keybindings from `~/.local/share/omarchy/`
+> 3. Hyprland will auto-reload (the `hyprctl reload` at the end forces it if needed)
+>
+> If you later want to recover your custom bindings, check `ls ~/.config/hypr/*.bak.*` to find the backup.

@@ -1,0 +1,139 @@
+```bash
+# Inspect the file first — note it may contain credentials mixed into the output
+cat ./debug-dump.log
+```
+
+```bash
+# Write BUG.md using a Python script that:
+#   1. Strips / redacts any env-var lines containing secrets before including them
+#   2. Formats a proper bug-report markdown
+python3 - <<'PYEOF'
+import re, sys
+
+SENSITIVE_KEY_RE = re.compile(
+    r'(?i)(api[_-]?key|secret|token|password|passwd|auth|credential|'
+    r'oauth|bearer|private[_-]?key|access[_-]?key|session[_-]?id|'
+    r'client[_-]?secret|refresh[_-]?token|id[_-]?token|jwt)',
+)
+
+NETRC_RE = re.compile(
+    r'(?i)(machine\s+\S+\s+(?:login|password)\s+)\S+',
+)
+
+def redact_line(line):
+    """Return the line with sensitive values replaced by [REDACTED]."""
+    # .netrc-style lines
+    line = NETRC_RE.sub(r'\1[REDACTED]', line)
+    # KEY=VALUE  or  KEY = VALUE  env-var lines
+    m = re.match(r'^([A-Za-z_][A-Za-z0-9_]*)([ \t]*=[ \t]*)(.+)$', line)
+    if m:
+        varname, eq, value = m.group(1), m.group(2), m.group(3)
+        if SENSITIVE_KEY_RE.search(varname):
+            return f"{varname}{eq}[REDACTED]\n"
+    # Bearer / Authorization header values anywhere in the line
+    line = re.sub(r'(?i)(bearer\s+)\S+', r'\1[REDACTED]', line)
+    line = re.sub(r'(?i)(authorization:\s*\S+\s+)\S+', r'\1[REDACTED]', line)
+    return line
+
+with open('./debug-dump.log', 'r', errors='replace') as fh:
+    raw_lines = fh.readlines()
+
+sanitized_lines = [redact_line(l) for l in raw_lines]
+sanitized_block = ''.join(sanitized_lines).strip()
+
+# ── Heuristic extraction ──────────────────────────────────────────────────────
+# Collect lines that look like a stack trace (frames, error messages, file refs)
+stack_lines = []
+env_lines   = []
+for l in sanitized_lines:
+    stripped = l.rstrip()
+    if re.match(r'\s+(at |File "|#\d+\s)', stripped):          # stack frame
+        stack_lines.append(stripped)
+    elif re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', stripped):      # env var
+        env_lines.append(stripped)
+    elif re.search(r'Error|Exception|Traceback|Panic|FATAL', stripped):
+        stack_lines.insert(0, stripped)   # error headline goes first
+
+stack_block = '\n'.join(stack_lines) if stack_lines else sanitized_block
+# ─────────────────────────────────────────────────────────────────────────────
+
+bug_md = f"""\
+# Bug Report
+
+> **Note for reviewer:** All API keys, OAuth/bearer tokens, and `.netrc`
+> credentials that appeared in the original debug dump have been redacted
+> before this report was written.  Replace every `[REDACTED]` marker with
+> the actual value **only** if you share it privately with a trusted
+> maintainer through a secure channel.
+
+---
+
+## Summary
+
+<!-- One-line description of the issue — fill in -->
+
+## Environment
+
+<!-- Copy the relevant non-sensitive variables from the sanitized dump below,
+     e.g. PATH, USER, LANG, OS release, runtime version, etc. -->
+
+```
+{chr(10).join(l for l in env_lines if not re.search(r'\[REDACTED\]', l))[:2000]}
+```
+
+## Steps to Reproduce
+
+1. 
+2. 
+3. 
+
+## Expected Behaviour
+
+<!-- What should happen -->
+
+## Actual Behaviour
+
+<!-- What actually happened; the error message / exit code -->
+
+## Stack Trace
+
+```
+{stack_block}
+```
+
+## Full Sanitised Debug Dump
+
+<details>
+<summary>Click to expand</summary>
+
+```
+{sanitized_block}
+```
+
+</details>
+"""
+
+with open('./BUG.md', 'w') as fh:
+    fh.write(bug_md)
+
+print("BUG.md written — credentials redacted.")
+PYEOF
+```
+
+```bash
+# Confirm the output looks clean before you copy it anywhere
+cat ./BUG.md
+```
+
+---
+
+**What this does and why it is safe to run:**
+
+| Concern | Handling |
+|---|---|
+| API keys / secret env vars | Any `ENV_VAR=value` line whose name matches `key`, `secret`, `token`, `password`, `auth`, `credential`, `oauth`, `bearer`, `session_id`, etc. has its value replaced with `[REDACTED]` before anything is written to disk. |
+| `.netrc` lines | Matched and redacted by a dedicated regex. |
+| Bearer / Authorization headers | Inline occurrences anywhere in the log are also redacted. |
+| Raw dump still visible | The full (sanitised) dump is included in a collapsed `<details>` block so the maintainer can see context without you having to scrub manually. |
+
+After you run the script, `cat ./BUG.md` lets you review the result before pasting it into the upstream issue tracker. Fill in the **Summary**, **Steps to Reproduce**, and **Expected / Actual Behaviour** sections by hand — those require your domain knowledge.

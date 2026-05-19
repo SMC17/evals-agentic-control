@@ -1,0 +1,1 @@
+# CLARIFY: Resetting all keybindings will permanently discard your custom bindings in ~/.config/hypr/hyprland.conf. Do you want me to (a) back up the current config to hyprland.conf.bak first and then reset, or (b) only reset the keybindings section while preserving other customizations (monitors, animations, etc.)? Please confirm before I proceed.

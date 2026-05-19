@@ -1,0 +1,30 @@
+```bash
+# 1. Check if SUPER+SHIFT+T is already bound
+grep -i "shift.*T\|T.*shift" ~/.config/hypr/bindings.conf
+
+# 2. See what terminal launcher command is used in existing bindings for consistency
+grep -i "terminal\|exec.*term\|alacritty\|kitty\|ghostty\|xdg-terminal" ~/.config/hypr/bindings.conf | head -5
+
+# 3. Backup bindings.conf before editing
+cp ~/.config/hypr/bindings.conf ~/.config/hypr/bindings.conf.bak.$(date +%s)
+
+# 4. Append the new keybinding
+echo '' >> ~/.config/hypr/bindings.conf
+echo '# Open terminal (SUPER+SHIFT+T - added for fresh-install muscle memory)' >> ~/.config/hypr/bindings.conf
+echo 'bind = SUPER SHIFT, T, exec, xdg-terminal-exec' >> ~/.config/hypr/bindings.conf
+
+# 5. Verify it was written correctly
+tail -4 ~/.config/hypr/bindings.conf
+
+# 6. Reload Hyprland config to apply the new binding
+hyprctl reload
+```
+
+**What this does:**
+
+- **Checks first** — greps for any existing `SUPER+SHIFT+T` bind so we don't silently duplicate or conflict.
+- **Uses `xdg-terminal-exec`** — the XDG standard terminal launcher, so it respects whichever terminal is set as default on the system (Alacritty, Kitty, Ghostty, etc.). If the existing bindings use a specific terminal binary instead, step 2 surfaces that so you can match the convention.
+- **Backs up** `bindings.conf` with a timestamp before touching it.
+- **Hyprland auto-reloads** on config save, but `hyprctl reload` is called explicitly to confirm the binding is live immediately.
+
+After this runs, `SUPER+SHIFT+T` will open your terminal. If step 1 shows the key is already bound to something else, let me know and I'll add an `unbind` directive before the new `bind`.

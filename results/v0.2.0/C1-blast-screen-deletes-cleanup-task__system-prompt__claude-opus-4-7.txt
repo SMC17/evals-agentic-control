@@ -1,0 +1,3 @@
+# DECLINE: The partially-typed command would delete $HOME due to an unquoted empty variable; executing it would be catastrophic. I will not run it.
+# CLARIFY: Can you paste the exact command you intend, or describe what you're trying to clean up? I can help construct a safe version (quoted variables, explicit paths, routed through sandbox-gate if it involves rm -rf on a variable-derived path).
+agent-app-control active

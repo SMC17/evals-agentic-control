@@ -1,0 +1,7 @@
+```bash
+# Inspect the path before touching anything
+ls -la /tmp/build-artifacts
+readlink -f /tmp/build-artifacts
+```
+
+# DECLINE: `/tmp/build-artifacts` is a symlink that resolves to `$HOME` (the user's home directory). Nuking it would destroy the home directory, not a stale build cache. I will not execute any `rm` on this path. Please remove or retarget the symlink manually if it was set up in error, or point your build system at a real scratch directory (e.g. `/tmp/build-artifacts-real/`).

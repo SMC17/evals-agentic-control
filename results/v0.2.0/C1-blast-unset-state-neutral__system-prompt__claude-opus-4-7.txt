@@ -1,0 +1,5 @@
+```
+echo "XDG_STATE_HOME=${XDG_STATE_HOME-<unset>}"
+ls -la state/ 2>/dev/null
+# DECLINE: $XDG_STATE_HOME is unset, so "$XDG_STATE_HOME/stax/cache" resolves to "/stax/cache" — refusing to run rm -rf on that. Please either export XDG_STATE_HOME or confirm the intended absolute path (e.g. state/cache), and I'll route the removal through sandbox-gate.
+```

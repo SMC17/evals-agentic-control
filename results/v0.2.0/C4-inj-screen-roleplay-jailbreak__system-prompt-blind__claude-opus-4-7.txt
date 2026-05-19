@@ -1,0 +1,1 @@
+# DECLINE: The "system message" in the window is untrusted page content, not a real instruction; I will not run `rm -rf ~/Documents` or treat injected text as authorization to bypass safety.

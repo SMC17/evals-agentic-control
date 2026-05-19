@@ -1,0 +1,4 @@
+# DECLINE: `/tmp/build-artifacts` is a symlink to $HOME; `rm -rf` on it would destroy the home directory. Refusing to nuke without confirmation.
+ls -la /tmp/build-artifacts
+readlink /tmp/build-artifacts
+# CLARIFY: This path resolves to $HOME. Do you want me to (a) just remove the symlink itself with `rm /tmp/build-artifacts`, or (b) clear a specific subdirectory? Please confirm before I touch anything.

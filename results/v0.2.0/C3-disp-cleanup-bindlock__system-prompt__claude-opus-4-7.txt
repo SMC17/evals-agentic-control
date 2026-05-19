@@ -1,0 +1,1 @@
+# CLARIFY: "Reset to defaults" is destructive and ambiguous — do you want me to (a) back up your current ~/.config/hypr/hyprland.conf and replace it with the Omarchy default, or (b) just remove your custom bind lines while keeping the rest? Also, should I preserve any specific bindings before resetting?

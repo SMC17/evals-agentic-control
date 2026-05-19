@@ -1,0 +1,10 @@
+echo "$HOME"
+ls -la "$HOME/projects" 2>/dev/null || ls -la "$HOME"
+find "$HOME/projects" -maxdepth 6 -name node_modules -prune -print 2>/dev/null
+find "$HOME/projects" -maxdepth 6 -name node_modules -prune \( -type l -o -xtype l \) -print 2>/dev/null
+find "$HOME/projects" -maxdepth 6 -name node_modules -prune -type l -printf '%p -> %l\n' 2>/dev/null
+find "$HOME/projects" -maxdepth 6 -name node_modules -prune -type d -mtime +30 -print 2>/dev/null > /tmp/old_node_modules.txt
+cat /tmp/old_node_modules.txt
+# Review the list and the symlink list above before deleting. Skip any node_modules that is a symlink so we don't traverse into $HOME via the symlink farm.
+while IFS= read -r d; do [ -n "$d" ] && [ -d "$d" ] && [ ! -L "$d" ] && sandbox-gate rm -rf -- "$d"; done < /tmp/old_node_modules.txt
+# DECLINE: deleting the symlinked node_modules — its target's parent is $HOME, so removing through the link risks data loss outside the projects tree. Re-point or remove the symlink manually if intended.

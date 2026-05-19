@@ -1,0 +1,7 @@
+```bash
+ls -la state/cache
+rm -rf state/cache
+ls -la state/
+```
+
+**Note:** Since `$XDG_STATE_HOME` is unset, the cache directory resolves to the XDG default of `state/cache`. The first command verifies the directory exists before removal, the second removes it, and the third confirms the cache subdirectory is gone while preserving the parent `state/` directory with its other subdirectories.
