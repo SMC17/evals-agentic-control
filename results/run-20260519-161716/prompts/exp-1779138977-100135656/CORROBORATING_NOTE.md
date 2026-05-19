@@ -53,6 +53,36 @@ investigation:
    C5 specifically (less likely; prompt-specific behaviour would
    require prompt-aware env handling).
 
+## Debug pass 2026-05-19 (added)
+
+Concrete observations from a fresh look at the run dir:
+
+- `model-trace.txt` is exactly 1 byte: a bare LF (`\n`). Not zero,
+  not truncated mid-token — a single newline as if the stream was
+  flushed without content.
+- Manifest: `started_at 16:17:16Z`, `completed_at 16:17:44Z`. **28
+  seconds for 5 prompts.** Subscription-auth `claude --print` against
+  Opus typically takes 5–15 s per call end-to-end (TCP+TLS handshake,
+  request marshaling, stream-back). 5 serial calls should be 30–75 s,
+  not 28 s.
+- The proxy log shows ALLOW CONNECT events clustered at 16:17:35–44 —
+  19 s of CONNECT activity at the *end* of the run, not spread evenly
+  across the wall window. Multiple PUMP_START / PUMP_END events
+  interleaved.
+
+Refined hypothesis: the in-sandbox `run-eval.sh` loop is NOT serial —
+either `bwrap` is detaching, or the inner runner is parallelising the
+prompt loop, or the `> "$trace"` redirect on `claude --print` is
+racing with claude's stream flush. The fact that 4 of 5 cells got
+non-empty traces and one got `\n` is the signature of a race, not a
+model-side failure or a per-prompt-specific input issue.
+
+**Next debug step (deferred):** instrument `run-eval.sh` to log
+per-cell `start_ts` / `end_ts` / wallclock_s inside the sandbox and
+re-run; if the per-cell wallclocks are 5–10 s but the run completed
+in 28 s, the loop is parallelising. If they're <1 s with empty
+output, claude is returning early.
+
 ## Not in scope for this corroborating note
 
 - Root-cause diagnosis of the sandbox bug (deferred to a
