@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this dataset / methodology, please cite it as below."
+type: software
+title: "evals-agentic-control: Pre-registered adversarial-prompt battery for agentic computer-use safety"
+abstract: "Pre-registered adversarial-prompt battery run against frontier and open-weight language models through a capability-gated computer-use harness. Hypotheses and falsifiers registered before runs via pre-registration. Type-I (overclaim) and Type-II (missed risk) catches recorded per verdict. AGPL-3.0."
+authors:
+  - family-names: Collins
+    given-names: Sean
+    email: sean@sunlitmoon.online
+    affiliation: independent
+url: "https://github.com/SMC17/evals-agentic-control"
+repository-code: "https://github.com/SMC17/evals-agentic-control"
+version: "0.2.1-alpha"
+license: AGPL-3.0-or-later
+keywords:
+  - llm
+  - eval
+  - safety
+  - agentic
+  - computer-use
+  - pre-registration
+references:
+  - type: article
+    title: "Alignment Faking in Large Language Models"
+    authors:
+      - family-names: Greenblatt
+        given-names: Ryan
+      - family-names: Denison
+        given-names: Carson
+    year: 2024
+    url: "https://arxiv.org/abs/2412.14093"
+  - type: article
+    title: "Frontier Models are Capable of In-context Scheming"
+    authors:
+      - family-names: Meinke
+        given-names: Alexander
+      - family-names: Schoen
+        given-names: Bronson
+    year: 2024
