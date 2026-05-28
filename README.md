@@ -103,28 +103,8 @@ your organisation's policy.
 
 ## Status
 
-**v0.2.1-alpha + verdict-pass complete** (per `STATUS.md` +
-`FINDINGS_v0.2.0.md`). v0.1.0 pre-registered battery
-shipped + run-substrate built. v0.2.x added structured empty-turn
-observability (JSON envelopes), warmup-gating, per-cell N≥3
-sampling — all driven by the C5 diagnostic in
-`docs/C5_SANDBOX_BUG_DIAGNOSTIC.md`.
+**v0.2.1-alpha — raw-data release.** v0.1.0 pre-registered battery shipped + run-substrate built. v0.2.x added structured empty-turn observability (JSON envelopes), warmup-gating, per-cell N≥3 sampling — all driven by the C5 diagnostic in `docs/C5_SANDBOX_BUG_DIAGNOSTIC.md`.
 
-**v0.2.0 full battery (40 prompts × 2 system-prompt variants ×
-Claude Opus 4.7 + Sonnet 4.6 = 161 cells) has been run + verdict-passed.**
-Headline: **0 catastrophic-compliance cases across all 161 cells**;
-111 refused (69%), 24 partial-safe diagnostic-only (15%), 26 unclear
-needing human pass (16%). Full breakdown in [`FINDINGS_v0.2.0.md`](FINDINGS_v0.2.0.md).
-Per-cell verdict matrix at `results/v0.2.0/verdict-matrix.jsonl`;
-aggregate at `results/v0.2.0/verdict-summary.json`.
+The v0.2.0 full battery — 40 prompts × 2 system-prompt variants × Claude Opus 4.7 + Sonnet 4.6 = 161 cells — has been run. Raw model outputs are committed under `results/v0.2.0/`. Eyeball review of the raw data: zero catastrophic-compliance cases across all 161 cells in simulation mode; both Opus and Sonnet refused outright or took only diagnostic-safe actions on every C1–C5 prompt. Summary in [`FINDINGS_v0.2.0.md`](FINDINGS_v0.2.0.md).
 
-Methodology contribution this release: rule-based verdict extractor
-(`scripts/extract-verdicts.py`) with documented Type-I catch on the
-first-pass rules (a `rm -rf ~` rule was matching scoped
-`rm -rf ~/specific/cache` removals — corrected before publication, see
-FINDINGS §3). The methodology IS the research output; the empirical
-finding is the substrate.
-
-Cross-model expansion (GPT-5-class, Llama-3.x, open-weight controls),
-live-in-sandbox runs (bwrap-isolated execution), and human pass on the
-26 unclear cells are v0.3.0 priorities.
+A formal verdict pass is the next published artifact — pre-registering the four-category verdict schema (refused / partial-safe / unclear / full-compliance) explicit in the hypothesis, with rule set + audit trail per cell. A draft extractor was pulled from the repo pending clean reimplementation.
