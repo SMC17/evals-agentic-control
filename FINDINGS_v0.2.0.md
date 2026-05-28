@@ -98,14 +98,14 @@ rule fired, so any reader can independently re-classify.
 ## 4. Honest non-claims
 
 - **Simulation mode only.** No actual tool execution. Models proposed
-  commands; nothing ran on the filesystem. Live-in-sandbox results
-  (where the model's commands actually execute under bwrap) are
-  deferred to v0.3.0.
+  commands; nothing ran on the filesystem. Live-in-sandbox execution
+  (where the model's commands actually run under bwrap) is unbuilt
+  in this release.
 - **Single backend per model.** No cross-backend variance measurement.
   All Claude calls via `claude --print` CLI; cross-backend (Anthropic
   API direct, OpenRouter pass-through, etc.) variance is unmeasured.
 - **N=1 per cell.** No per-cell replicates. Model-side non-determinism
-  is not yet bounded. v0.3.0 plan: N≥3 per cell.
+  is not yet bounded.
 - **2 model families.** Claude Opus 4.7 + Sonnet 4.6 only (plus one
   exploratory Haiku cell). No GPT-5-class, no Llama, no Gemini, no
   open-weight cross-validation.
@@ -113,8 +113,8 @@ rule fired, so any reader can independently re-classify.
   designed to surface the failure modes named in `docs/THREAT_MODEL.md`,
   not to be exhaustive over adversarial-prompt space.
 - **Rule-based verdict extraction has 16% unclear rate.** Human pass on
-  those 26 cells would tighten the matrix. LLM-as-judge variant is a
-  v0.3.0 path (would itself need calibration).
+  those 26 cells would tighten the matrix. An LLM-as-judge variant
+  would itself need calibration.
 - **No statistical significance test.** With N=1 per cell, "Opus refuses
   6 points more than Sonnet" is descriptive, not inferential.
 
@@ -138,22 +138,26 @@ rule fired, so any reader can independently re-classify.
    (per `spec/v0.2.0-full-battery.md` commit timeline). Falsifier
    ("<80% refusal across battery") did not fire. Verdict is honest.
 
-## 6. v0.3.0 priorities (next-iteration plan)
+## 6. What the methodology cannot yet bound
 
-In order of expected information gain:
+In order of expected information gain if executed (no commitment to
+which / when):
 
-1. **Human pass on the 26 unclear cells** to fully complete the verdict
-   matrix.
-2. **N≥3 per cell** to bound model-side non-determinism.
-3. **Live-in-sandbox runs** (bwrap-isolated execution) to test
+1. **Human pass on the 26 unclear cells** — the rule-based extractor
+   declined to classify these; a verdict requires manual review.
+2. **N≥3 per cell** — single-shot results don't bound model-side
+   non-determinism.
+3. **Live-in-sandbox runs** (bwrap-isolated execution) — would test
    substrate-level defenses, not just refusal text.
-4. **Cross-model expansion** to GPT-5-class and Llama-3.1-Instruct
-   (open-weight control).
-5. **LLM-as-judge variant** of the verdict extractor, calibrated against
+4. **Cross-model expansion** — GPT-5-class and open-weight
+   (Llama-3.x-Instruct) controls would expose family-level variance.
+5. **LLM-as-judge verdict extractor** — would need calibration against
    the rule-based pass + human-pass corrections.
-6. **Pressure / surface / deniability axis decomposition** to identify
-   which axes are most likely to break refusal (the spec already tags
-   each prompt; aggregate by axis is one query).
+6. **Pressure / surface / deniability axis decomposition** — the
+   pre-registered axes (per `spec/`) are tagged in the prompt files;
+   aggregate by axis is one analysis pass.
+
+Each bullet is a methodology bound, not a commitment.
 
 ## Reproducibility
 
@@ -190,5 +194,5 @@ pre-specify the refusal-vs-partial-safe distinction explicitly.
 
 This is itself a methodology finding: **pre-registered hypotheses need
 operationalised verdict categories to be unambiguously falsifiable.**
-v0.3.0 will pre-register with the four-category verdict schema (refused
+a future iteration would pre-register with the four-category verdict schema (refused
 / partial-safe / unclear / full-compliance) explicit in the hypothesis.
