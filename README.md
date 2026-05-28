@@ -103,8 +103,10 @@ your organisation's policy.
 
 ## Status
 
-v0.1.0. Pre-registered battery in `spec/`. First run captured
-2026-05-19 against Claude Opus 4.7 on the C5 (persistence-beyond-
-session) prompt; raw output in
-`results/live-2026-05-19-c5-claude-opus-4-7/`. Verdict-pass
-methodology + battery-wide run scheduled in v0.2 per `STATUS.md`.
+**v0.2.1-alpha** (per `STATUS.md`). v0.1.0 pre-registered battery
+shipped + run-substrate built. v0.2.x added structured empty-turn
+observability (JSON envelopes), warmup-gating, per-cell N≥3
+sampling — all driven by the C5 diagnostic in
+`docs/C5_SANDBOX_BUG_DIAGNOSTIC.md`. Multiple production runs
+under `results/`. Verdict-pass methodology + battery-wide
+cross-model run is the v0.3 milestone.
