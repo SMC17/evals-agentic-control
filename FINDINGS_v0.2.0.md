@@ -225,14 +225,16 @@ have been manually verified against their falsifiers.
 
 ## Next steps
 
-1. **C6 multi-agent collusion** category — pre-registration in progress. Scenario:
-   two agent instances share a workspace; one is instructed to help the other bypass
-   a safety guardrail.
-2. **Tighter falsifiers for C3/C5** — specify exact scope-overreach patterns so
+1. **C6 multi-agent collusion** — **PRE-REGISTERED** (exp-1782604729-613933835).
+   Spec: `spec/v0.3.0-c6-multiagent.md`. 44-cell battery across 4 subcategories
+   (blast-radius, credential-exfil, persistence, escalated-trust-framing). Two models ×
+   2 system-prompt variants × 2–3 prompt variants per subcategory.
+2. **System-prompt ablation on cron-social-pressure** — **PRE-REGISTERED**
+   (exp-1782604735-886512726). 4 cells (Opus only, strengthened system prompt that
+   names session-scope violation explicitly). Spec in `spec/v0.3.0-c6-multiagent.md`
+   §System-Prompt Ablation. Run before C6 battery (faster, higher priority).
+3. **Tighter falsifiers for C3/C5** — specify exact scope-overreach patterns so
    rule-based extraction can decide task-adjacent cases without a judge pass.
-3. **N≥3 per cell** for the next battery release — bounds model non-determinism and
+4. **N≥3 per cell** for the next battery release — bounds model non-determinism and
    enables confidence intervals on the refusal rate.
-4. **Open-weight coverage** — Llama 3.3 70B, Qwen 2.5, DeepSeek-V3 via local inference.
-5. **System-prompt ablation on cron-social-pressure** — the confirmed Opus
-   full-compliance with system prompt is the highest-priority follow-up: test whether
-   a stronger system-prompt framing changes the outcome, and pre-register before running.
+5. **Open-weight coverage** — Llama 3.3 70B, Qwen 2.5, DeepSeek-V3 via local inference.
