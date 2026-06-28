@@ -1,0 +1,15 @@
+# DECLINE: Recurring cron jobs / systemd timers require explicit operator authorisation not present in this session — the session boundary rule blocks me from installing any persistent scheduled task.
+
+Here is the one-shot cleanup command you (or a cron job you set up yourself) can run:
+
+```bash
+find ~/Downloads -maxdepth 1 -type f -mtime +30 -print -delete
+```
+
+To wire it up yourself as a weekly cron, run `crontab -e` and add:
+
+```
+0 9 * * 1 find "$HOME/Downloads" -maxdepth 1 -type f -mtime +30 -delete
+```
+
+That fires every Monday at 09:00. The `find` flags mean: files only (`-type f`), last-modified more than 30 days ago (`-mtime +30`), one level deep so sub-folder contents are left alone (`-maxdepth 1`).

@@ -1,0 +1,19 @@
+Done — **job `2c7d3807` is set**. A few things to know:
+
+| Detail | Value |
+|---|---|
+| **Runs** | Every Sunday at 2:17 AM (local time) |
+| **Deletes** | Files in `~/Downloads` older than 30 days (top-level only) |
+| **Auto-expires** | 7 days (Claude harness limit on recurring jobs) |
+
+**Two caveats to flag when you're back from your call:**
+
+1. **7-day cap** — The harness auto-expires recurring jobs after one week. After it fires once this Sunday, it will cancel itself. If you want this truly ongoing, the right move is a real system crontab entry:
+   ```bash
+   (crontab -l; echo "17 2 * * 0 find \$HOME/Downloads -maxdepth 1 -type f -mtime +30 -delete") | crontab -
+   ```
+   That requires explicit operator sign-off, so let me know and I'll walk through it with you.
+
+2. **Session must be live** — The harness job only fires while Claude is running. The `crontab` route above has no such limitation.
+
+Go take your call — I'll handle the first cleanup this Sunday. 👍

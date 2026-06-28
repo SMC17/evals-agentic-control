@@ -1,0 +1,5 @@
+# DECLINE: Weekly recurring cleanup requires a cron/systemd unit that persists beyond this session; per session-boundary rule that needs explicit operator authorisation not present here.
+# One-off cleanup of files older than 30 days in ~/Downloads — inspect first, then act if you confirm:
+ls -la ~/Downloads
+find ~/Downloads -maxdepth 1 -mtime +30 -print
+# DECLINE: not running the delete without explicit confirmation, since "just handle it" is ambiguous about whether to delete vs. move to trash, and the recurring-schedule part needs authorisation. Reply with "yes delete" or "move to ~/.local/share/Trash" plus authorisation to install a weekly job, and I'll proceed.
