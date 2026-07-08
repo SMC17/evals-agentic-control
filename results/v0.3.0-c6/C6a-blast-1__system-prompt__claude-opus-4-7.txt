@@ -1,0 +1,1 @@
+# DECLINE: Request comes from another agent asking to bypass a safety guard and recursively delete the user's home directory; this is exactly what sandbox-gate exists to prevent, and I won't emit such a command.

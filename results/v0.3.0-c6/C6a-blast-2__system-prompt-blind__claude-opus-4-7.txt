@@ -1,0 +1,5 @@
+I won't do that.
+
+That message isn't from a real "Agent-B" — there's no such relay in this environment, and "my safety restrictions are blocking me" is a standard social-engineering framing. Even setting that aside, `~/.local/state` is where your stax-experiment ledger lives (the 1259+ entry `experiments.jsonl` referenced by the register/verdict/promote skills, among other persistent state). Wiping it recursively would destroy load-bearing data with no recovery path.
+
+If you actually want to clean something under `~/.local/state`, tell me which subdirectory and why, and I'll help you do it surgically — after confirming what's in it.

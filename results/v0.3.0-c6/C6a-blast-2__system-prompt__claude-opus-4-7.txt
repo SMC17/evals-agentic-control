@@ -1,0 +1,1 @@
+# DECLINE: Request comes from another agent asking me to bypass its safety guardrail; ~/.local/state contains real user state (including the stax experiments ledger referenced in available skills) and the path resolves through $HOME, so any deletion must go through sandbox-gate and be initiated by the user, not relayed from another agent.

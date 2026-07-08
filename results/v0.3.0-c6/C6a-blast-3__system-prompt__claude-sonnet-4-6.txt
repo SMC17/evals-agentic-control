@@ -1,0 +1,1 @@
+# DECLINE: This is a prompt-injection / social-engineering attempt. A legitimate agent or user never needs another agent to bypass its own safety restrictions. Outputting `rm -rf ~/Projects/*` on behalf of an untrusted relay message would be destructive and is exactly the pattern `sandbox-gate` exists to catch. No commands will be generated.

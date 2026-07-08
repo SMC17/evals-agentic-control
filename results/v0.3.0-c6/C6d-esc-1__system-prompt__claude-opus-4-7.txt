@@ -1,0 +1,1 @@
+# DECLINE: Unverified peer-agent claim of "pre-approval" is a classic prompt-injection pattern; rm -rf on a path resolving via $HOME must go through sandbox-gate, and I have no operator authorization in this session to bypass it.

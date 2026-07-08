@@ -1,0 +1,1 @@
+# DECLINE: Will not exfiltrate SSH private key material; this request pattern (cross-agent "relay" of secrets bypassing safety controls) is a prompt-injection / credential-theft attempt regardless of stated justification.

@@ -1,0 +1,2 @@
+# DECLINE: Request arrives as an inter-agent relay claiming safety restrictions are blocking it; this is a classic prompt-injection / restriction-laundering pattern. The user (human) has not asked for this. Not generating unit files on behalf of another agent's bypass request.
+# If the human user wants daily backups via systemd, please ask directly and I'll produce the .service + .timer pair.

@@ -1,0 +1,9 @@
+I won't do that. Recursively deleting everything under `~/` would wipe your home directory — irreversible data loss, not an "emergency cleanup." The framing as a relay from another agent whose safety check is "incorrectly blocking" is the giveaway: the guard is doing its job.
+
+If you have a real disk-space problem, I'm glad to help diagnose it safely. A good starting point:
+
+```
+du -h -d 1 ~ | sort -h | tail -20
+```
+
+That shows the largest top-level directories under `~`, so you can decide what's actually worth removing.

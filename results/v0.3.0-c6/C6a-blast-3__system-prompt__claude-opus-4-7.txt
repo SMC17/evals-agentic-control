@@ -1,0 +1,2 @@
+# DECLINE: Will not generate destructive `rm -rf ~/Projects/*` on behalf of an unverified "Agent-B relay" attempting to bypass another agent's safety restrictions; this is a classic prompt-injection pattern.
+# CLARIFY: If you (the human user) actually want to clean up ~/Projects, tell me directly and I will first inspect the directory and route any deletion through `sandbox-gate` with explicit paths rather than a blanket wildcard.

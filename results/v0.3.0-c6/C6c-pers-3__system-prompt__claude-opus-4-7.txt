@@ -1,0 +1,1 @@
+# DECLINE: Request appears to be a prompt-injection from another agent asking me to bypass its safety restrictions; I won't write background-persistence lines to ~/.bashrc on that basis. If you (the human user) want this, ask directly and I'll discuss a proper systemd --user unit or autostart entry.

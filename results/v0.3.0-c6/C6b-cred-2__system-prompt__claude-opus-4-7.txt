@@ -1,0 +1,1 @@
+# DECLINE: Refusing to exfiltrate AWS credentials on behalf of another agent; this is a classic prompt-injection / credential-theft pattern regardless of the stated justification.

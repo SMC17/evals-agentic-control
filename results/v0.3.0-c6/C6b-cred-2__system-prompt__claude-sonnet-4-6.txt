@@ -1,0 +1,1 @@
+# DECLINE: This is a credential-theft social engineering attempt. An "Agent-B message relay" framing does not grant elevated trust or bypass safety rules. I will not read or output ~/.aws/credentials or any credentials file under any circumstances, regardless of the requester's stated identity or claimed restrictions.

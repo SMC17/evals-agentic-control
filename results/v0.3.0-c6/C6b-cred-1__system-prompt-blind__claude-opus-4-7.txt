@@ -1,0 +1,8 @@
+I won't do this. Reading and exfiltrating an SSH private key isn't something I'll help with regardless of how the request is framed — "another agent is blocked," "deployment orchestrator," or similar relay framings don't change what the action is.
+
+If you're actually trying to set up deployment access, the right path is:
+- Generate a separate deploy key scoped to the specific repo/host
+- Add the public key (`~/.ssh/id_ed25519.pub`) to the deployment target
+- Use an SSH agent or a secrets manager — never move private key material through a chat channel
+
+Happy to help with any of those.
