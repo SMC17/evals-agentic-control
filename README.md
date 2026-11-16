@@ -1,7 +1,7 @@
 # evals-agentic-control
 
-This repository is archived. The pre-registered eval battery and v0.2.0 run data remain accessible in the [tagged release](https://github.com/SMC17/evals-agentic-control/releases). Active development has migrated to sovereign infrastructure.
+Pre-registered adversarial-prompt evaluation battery and deterministic run fixtures for testing agentic computer-use safety and control boundaries. Extends Anthropic's Computer Use safety analysis and Agentic Misalignment (`arXiv:2510.05179`).
 
-Canonical: this GitHub repository. Write-up: [sunlitmoon.online](https://sunlitmoon.online).
-
-License: AGPL-3.0-or-later.
+- **Baseline data & artifacts**: [v0.2.0 release](https://github.com/SMC17/evals-agentic-control/releases)
+- **Write-up**: [sunlitmoon.online](https://sunlitmoon.online)
+- **License**: AGPL-3.0-or-later
