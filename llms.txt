@@ -1,0 +1,7 @@
+# evals-agentic-control (SMC17/evals-agentic-control)
+
+> Deterministic evaluation harness and control benchmarks for agentic coding workflows.
+
+- Repository: https://github.com/SMC17/evals-agentic-control
+- Companion Unified Substrate: https://github.com/SMC17/zinging
+- Profile: https://github.com/SMC17
